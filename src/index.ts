@@ -1,38 +1,72 @@
-import type { SnippeConfig, ResolvedSnippeConfig, Environment } from "./types";
+export { Snippe } from "./client";
+export { PaymentsResource } from "./resources/payments";
+export { SessionsResource } from "./resources/sessions";
+export { PayoutsResource } from "./resources/payouts";
 
-const DEFAULT_BASE_URLS: Record<Environment, string> = {
-  sandbox: "https://sandbox.api.snippe.example/v1",
-  production: "https://api.snippe.example/v1",
-};
+export { verifyWebhook, computeWebhookSignature } from "./webhooks";
+export type { VerifyWebhookOptions } from "./webhooks";
 
-const DEFAULT_TIMEOUT_MS = 30_000;
+export { generateIdempotencyKey } from "./http";
 
-export class Snippe {
-  private readonly config: ResolvedSnippeConfig;
+export {
+  SnippeError,
+  SnippeAuthenticationError,
+  SnippeValidationError,
+  SnippeRateLimitError,
+  SnippeWebhookVerificationError,
+} from "./errors";
+export type { SnippeErrorCode, SnippeErrorOptions } from "./errors";
 
-  constructor(config: SnippeConfig) {
-    if (!config?.apiKey) {
-      throw new Error("Snippe SDK: `apiKey` is required.");
-    }
+export type {
+  Environment,
+  SnippeConfig,
+  ResolvedSnippeConfig,
+  RequestOptions,
+  SnippeEnvelope,
+  SnippeErrorEnvelope,
+  Money,
+  RateLimitInfo,
+  // Payments
+  PaymentType,
+  PaymentStatus,
+  PaymentCustomer,
+  CreatePaymentParams,
+  CreateMobilePaymentParams,
+  CreateCardPaymentParams,
+  CreateQrPaymentParams,
+  Payment,
+  Balance,
+  ListPaymentsParams,
+  SearchPaymentsParams,
+  // Sessions
+  Session,
+  SessionStatus,
+  SessionPaymentMethod,
+  SessionCustomer,
+  CreateSessionParams,
+  CreateFixedAmountSessionParams,
+  CreateCustomAmountSessionParams,
+  ListSessionsParams,
+  // Payouts
+  Payout,
+  PayoutStatus,
+  PayoutChannel,
+  MobileProvider,
+  BankCode,
+  CreatePayoutParams,
+  CreateMobilePayoutParams,
+  CreateBankPayoutParams,
+  PayoutFee,
+  ListPayoutsParams,
+  // Webhooks
+  WebhookEvent,
+  WebhookEventType,
+  WebhookPaymentData,
+  WebhookPayoutData,
+  PaymentWebhookEvent,
+  PayoutWebhookEvent,
+  AnyWebhookEvent,
+} from "./types";
 
-    const environment: Environment = config.environment ?? "sandbox";
-
-    this.config = {
-      apiKey: config.apiKey,
-      environment,
-      baseUrl: config.baseUrl ?? DEFAULT_BASE_URLS[environment],
-      timeoutMs: config.timeoutMs ?? DEFAULT_TIMEOUT_MS,
-    };
-  }
-
-  getConfig(): Readonly<ResolvedSnippeConfig> {
-    return this.config;
-  }
-
-  async ping(): Promise<{ ok: true; environment: Environment }> {
-    return { ok: true, environment: this.config.environment };
-  }
-}
-
+import { Snippe } from "./client";
 export default Snippe;
-export type { SnippeConfig, ResolvedSnippeConfig, Environment } from "./types";
