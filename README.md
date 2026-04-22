@@ -210,16 +210,60 @@ try {
 | `webhookUrl`  | `string`                     | —                             | Default `webhook_url` applied to `create`/`send` calls.  |
 | `fetch`       | `typeof fetch`               | `globalThis.fetch`            | Custom fetch (e.g. undici, node-fetch).                  |
 
+## Examples
+
+Runnable scenarios live in [`examples/`](./examples) — mobile money, card, QR, hosted checkout, donation sessions, mobile and bank payouts, webhook handler (Express), retry loop, and polling-based reconciliation. Each is self-contained:
+
+```bash
+export SNIPPE_API_KEY="snp_..."
+npx tsx examples/01-mobile-money.ts
+```
+
+See [`examples/README.md`](./examples/README.md) for the full index.
+
 ## Development
 
 ```bash
 npm install
-npm run typecheck
-npm run build
+npm run typecheck      # tsc --noEmit
+npm test               # run the vitest suite
+npm run test:watch     # iterate locally
+npm run test:coverage  # with v8 coverage report (coverage/)
+npm run build          # emit dist/{esm,cjs,types}
 ```
 
-Build outputs land in `dist/`: `esm/`, `cjs/`, and `types/`.
+### Testing approach
+
+Tests mock the network by injecting a fake `fetch` via `new Snippe({ fetch })` — the same seam the SDK already exposes for custom HTTP clients. No `msw` or live network. The suite covers the HTTP layer (auth headers, idempotency, error mapping, rate-limit parsing, timeouts), webhook signature verification (happy path, bad sig, stale timestamp, replay, malformed JSON), every resource method, and the `SnippeError.retryable` decision table.
+
+## Releasing
+
+Releases are automated by [`.github/workflows/publish.yml`](./.github/workflows/publish.yml). The workflow runs on every push to `main`:
+
+1. Installs, typechecks, tests, builds.
+2. Reads `version` from `package.json`.
+3. Queries npm — if that version is already published, it skips.
+4. Otherwise runs `npm publish --provenance --access public` and opens a matching GitHub release.
+
+To cut a release:
+
+```bash
+npm version patch   # or minor / major — creates a commit + git tag
+git push --follow-tags origin main
+```
+
+The workflow publishes the new version. Pushing code without a version bump re-runs tests but does **not** republish.
+
+### One-time repo setup
+
+- Create an npm [Automation token](https://docs.npmjs.com/creating-and-viewing-access-tokens) with **publish** scope.
+- In GitHub → **Settings → Secrets and variables → Actions**, add it as `NPM_TOKEN`.
+- Provenance is emitted via the `id-token: write` permission already declared in the workflow — no extra setup.
+
+## Continuous integration
+
+[`.github/workflows/ci.yml`](./.github/workflows/ci.yml) runs on every push and PR to `main`: Node 18 **and** 20, typecheck, full test suite with coverage, and a build. Coverage is uploaded as an artifact on the Node 20 job.
 
 ## License
 
-MIT
+MIT — see [LICENSE](./LICENSE).

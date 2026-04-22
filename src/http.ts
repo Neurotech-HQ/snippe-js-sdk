@@ -143,12 +143,16 @@ export class HttpClient {
 }
 
 function isSuccessEnvelope<T>(value: unknown): value is SnippeEnvelope<T> {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    (value as { status?: string }).status === "success" &&
-    "data" in (value as Record<string, unknown>)
-  );
+  if (typeof value !== "object" || value === null) return false;
+  const obj = value as { status?: string; code?: unknown; data?: unknown };
+  if (obj.status === "error") return false;
+  // Two envelope shapes observed in the Snippe API:
+  //   Payments/payouts/balance: { status: "success", code, data }
+  //   Sessions:                 { code, data }
+  // In both, `data` is present and `code` is numeric.
+  if (!("data" in obj)) return false;
+  if (typeof obj.code !== "number") return false;
+  return obj.status === "success" || obj.status === undefined;
 }
 
 function isErrorEnvelope(value: unknown): value is SnippeErrorEnvelope {

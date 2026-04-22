@@ -24,20 +24,40 @@
     "build:types": "tsc -p tsconfig.types.json",
     "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
     "snippe",
     "payments",
+    "tanzania",
+    "mobile-money",
+    "m-pesa",
+    "airtel-money",
+    "tigo-pesa",
+    "halotel",
     "sdk",
     "typescript"
   ],
-  "author": "",
+  "author": "Neurotech",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Neurotech-HQ/snippe-js-sdk.git"
+  },
+  "homepage": "https://github.com/Neurotech-HQ/snippe-js-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/Neurotech-HQ/snippe-js-sdk/issues"
+  },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "@vitest/coverage-v8": "^4.1.5",
     "rimraf": "^5.0.5",
-    "typescript": "^5.4.0"
+    "tsx": "^4.21.0",
+    "typescript": "^5.4.0",
+    "vitest": "^4.1.5"
   },
   "engines": {
     "node": ">=18"

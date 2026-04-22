@@ -1,0 +1,28 @@
+# The npm tarball is built from the `files` allow-list in package.json,
+# but .npmignore provides a belt-and-braces blocklist for anything that
+# might sneak in via dotfiles or hoisted configs.
+
+# Source & dev-only
+src/
+tests/
+examples/
+coverage/
+.nyc_output/
+.vitest/
+
+# TS configs that are only used during development
+tsconfig*.json
+vitest.config.ts
+
+# CI, editor, and tooling
+.github/
+.agents/
+.claude/
+.vscode/
+.idea/
+skills-lock.json
+
+# Build intermediates
+*.tsbuildinfo
+*.log
+.DS_Store
