@@ -1,5 +1,5 @@
 {
-  "name": "snippe-js-sdk",
+  "name": "@snippe/sdk",
   "version": "0.2.0",
   "description": "Official JavaScript/TypeScript SDK for the Snippe payment platform (Tanzania mobile money, cards, QR, and payouts).",
   "main": "./dist/cjs/index.js",

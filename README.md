@@ -1,4 +1,4 @@
-# snippe-js-sdk
+# @snippe/sdk
 
 Official JavaScript / TypeScript SDK for [Snippe](https://snippe.sh) — the Tanzania payment platform (mobile money, cards, QR, and payouts).
 
@@ -9,13 +9,13 @@ Official JavaScript / TypeScript SDK for [Snippe](https://snippe.sh) — the Tan
 ## Install
 
 ```bash
-npm install snippe-js-sdk
+npm install @snippe/sdk
 ```
 
 ## Quick start
 
 ```ts
-import { Snippe } from "snippe-js-sdk";
+import { Snippe } from "@snippe/sdk";
 
 const snippe = new Snippe({
   apiKey: process.env.SNIPPE_API_KEY!, // snp_...
@@ -129,7 +129,7 @@ Snippe signs every webhook with HMAC-SHA256 over `{timestamp}.{raw_body}`. The S
 
 ```ts
 import express from "express";
-import { verifyWebhook, SnippeWebhookVerificationError } from "snippe-js-sdk";
+import { verifyWebhook, SnippeWebhookVerificationError } from "@snippe/sdk";
 
 const app = express();
 
@@ -179,7 +179,7 @@ import {
   SnippeError,
   SnippeRateLimitError,
   SnippeValidationError,
-} from "snippe-js-sdk";
+} from "@snippe/sdk";
 
 try {
   await snippe.payments.create(params);

@@ -1,6 +1,6 @@
 # Examples
 
-Runnable integration snippets for `snippe-js-sdk`. Each file is self-contained — pick the one closest to your use case, copy it into your app, adapt.
+Runnable integration snippets for `@snippe/sdk`. Each file is self-contained — pick the one closest to your use case, copy it into your app, adapt.
 
 ## Run locally
 

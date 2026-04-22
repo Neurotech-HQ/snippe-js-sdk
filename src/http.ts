@@ -13,7 +13,7 @@ import type {
 } from "./types";
 
 const SDK_VERSION = "0.2.0";
-const USER_AGENT = `snippe-js-sdk/${SDK_VERSION}`;
+const USER_AGENT = `@snippe/sdk/${SDK_VERSION}`;
 const MAX_IDEMPOTENCY_KEY_LENGTH = 30;
 
 export interface HttpRequest {

@@ -12,7 +12,7 @@ describe("HTTP client", () => {
     const req = mock.lastRequest();
     expect(req.headers["authorization"]).toBe("Bearer snp_abc");
     expect(req.headers["snippe-version"]).toBe("2026-01-25");
-    expect(req.headers["user-agent"]).toMatch(/^snippe-js-sdk\//);
+    expect(req.headers["user-agent"]).toMatch(/^@snippe\/sdk\//);
     expect(req.headers["accept"]).toBe("application/json");
   });
 
