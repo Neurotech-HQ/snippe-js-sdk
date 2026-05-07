@@ -4,11 +4,11 @@
  * The amount + fee is debited from your balance immediately when you
  * create the payout. Always:
  *
- *   1. Ask for the fee via `payouts.fee(amount)` → note `total_amount`.
- *   2. Check `payments.balance()` has at least `total_amount` available.
- *   3. Only then call `payouts.send(...)`.
+ *   1. Ask for the fee via `payouts.mobile.fee({ amount })` → note `totalAmount`.
+ *   2. Check `payments.balance()` has at least `totalAmount` available.
+ *   3. Only then call `payouts.mobile.send(...)`.
  *
- * Minimum payout amount is 5,000 TZS.
+ * Minimum payout amount is 5,000 TZS (the SDK validates client-side).
  */
 import { Snippe } from "../src";
 
@@ -21,27 +21,26 @@ async function main() {
   const amount = 50_000; // 50,000 TZS to the recipient
 
   // 1. Fee preflight
-  const fee = await snippe.payouts.fee(amount);
-  console.log(`Fee: ${fee.fee_amount} TZS → total debit: ${fee.total_amount} TZS`);
+  const fee = await snippe.payouts.mobile.fee({ amount });
+  console.log(`Fee: ${fee.feeAmount} TZS → total debit: ${fee.totalAmount} TZS`);
 
   // 2. Balance check
   const { available } = await snippe.payments.balance();
-  if (available.value < fee.total_amount) {
+  if (available.value < fee.totalAmount) {
     console.error(
-      `Insufficient balance: ${available.value} available, need ${fee.total_amount}`,
+      `Insufficient balance: ${available.value} available, need ${fee.totalAmount}`,
     );
     process.exit(1);
   }
 
   // 3. Send — same `idempotencyKey` across retries is key for payout safety.
-  const payout = await snippe.payouts.send(
+  const payout = await snippe.payouts.mobile.send(
     {
       amount,
-      channel: "mobile",
-      recipient_phone: "255781000000",
-      recipient_name: "Employee Name",
+      phoneNumber: "0781000000",
+      recipientName: "Employee Name",
       narration: "Salary January 2026",
-      metadata: { employee_id: "EMP-001" },
+      metadata: { employeeId: "EMP-001" },
     },
     { idempotencyKey: "payout-emp001-jan" }, // ≤30 chars
   );

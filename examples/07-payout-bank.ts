@@ -2,7 +2,7 @@
  * 07 — Bank transfer payout
  *
  * Same preflight pattern as mobile-money payouts, but you supply a bank
- * code, account number, and recipient name. The recipient name must match
+ * code, account number, and account name. The account name must match
  * what the bank has on file, or the transfer may be rejected.
  *
  * See the SDK's `BankCode` type for the full list of supported codes
@@ -18,28 +18,27 @@ const snippe = new Snippe({
 async function main() {
   const amount = 100_000; // 100,000 TZS
 
-  const fee = await snippe.payouts.fee(amount);
+  const fee = await snippe.payouts.bank.fee({ amount });
   const { available } = await snippe.payments.balance();
-  if (available.value < fee.total_amount) {
-    console.error(`Insufficient balance (need ${fee.total_amount}, have ${available.value})`);
+  if (available.value < fee.totalAmount) {
+    console.error(`Insufficient balance (need ${fee.totalAmount}, have ${available.value})`);
     process.exit(1);
   }
 
-  const payout = await snippe.payouts.send({
+  const payout = await snippe.payouts.bank.send({
     amount,
-    channel: "bank",
-    recipient_bank: "CRDB",
-    recipient_account: "0150000000000",
-    recipient_name: "Acme Vendor Ltd",
+    bankCode: "CRDB",
+    accountNumber: "0150000000000",
+    accountName: "Acme Vendor Ltd",
     narration: "Invoice INV-2026-001",
-    metadata: { invoice_id: "INV-2026-001" },
+    metadata: { invoiceId: "INV-2026-001" },
   });
 
   console.log("Bank payout created:");
-  console.log("  reference          :", payout.reference);
-  console.log("  external_reference :", payout.external_reference);
-  console.log("  fees               :", payout.fees.value, "TZS");
-  console.log("  total              :", payout.total.value, "TZS");
+  console.log("  reference         :", payout.reference);
+  console.log("  externalReference :", payout.externalReference);
+  console.log("  fees              :", payout.fees.value, "TZS");
+  console.log("  total             :", payout.total.value, "TZS");
 }
 
 function requireEnv(name: string): string {

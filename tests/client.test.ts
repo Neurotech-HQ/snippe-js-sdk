@@ -29,14 +29,16 @@ describe("Snippe client", () => {
     expect(cfg.timeoutMs).toBe(5_000);
   });
 
-  it("wires up payments, sessions, and payouts resources", () => {
+  it("wires up payments, checkout, and payouts resources", () => {
     const snippe = new Snippe({ apiKey: "snp_test" });
     expect(snippe.payments).toBeDefined();
-    expect(snippe.sessions).toBeDefined();
+    expect(snippe.checkout).toBeDefined();
     expect(snippe.payouts).toBeDefined();
-    expect(typeof snippe.payments.create).toBe("function");
-    expect(typeof snippe.sessions.create).toBe("function");
-    expect(typeof snippe.payouts.send).toBe("function");
+    expect(typeof snippe.payments.mobile.create).toBe("function");
+    expect(typeof snippe.payments.card.create).toBe("function");
+    expect(typeof snippe.checkout.create).toBe("function");
+    expect(typeof snippe.payouts.mobile.send).toBe("function");
+    expect(typeof snippe.payouts.bank.send).toBe("function");
   });
 
   it("accepts a custom fetch implementation", () => {

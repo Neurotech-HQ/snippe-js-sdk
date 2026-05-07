@@ -35,29 +35,30 @@ export type BankCode =
   // Allow forward-compatible bank codes.
   | (string & {});
 
-interface BasePayoutParams {
+export interface CreateMobilePayoutInput {
   amount: number;
+  phoneNumber: string;
+  recipientName: string;
+  /** Free-text statement description visible to the recipient. */
   narration?: string;
-  webhook_url?: string;
+  webhookUrl?: string;
   metadata?: Record<string, unknown>;
 }
 
-export interface CreateMobilePayoutParams extends BasePayoutParams {
-  channel: "mobile";
-  recipient_phone: string;
-  recipient_name: string;
+export interface CreateBankPayoutInput {
+  amount: number;
+  bankCode: BankCode;
+  accountNumber: string;
+  accountName: string;
+  /** Free-text statement description visible to the recipient. */
+  narration?: string;
+  webhookUrl?: string;
+  metadata?: Record<string, unknown>;
 }
 
-export interface CreateBankPayoutParams extends BasePayoutParams {
-  channel: "bank";
-  recipient_bank: BankCode;
-  recipient_account: string;
-  recipient_name: string;
+export interface PayoutFeeInput {
+  amount: number;
 }
-
-export type CreatePayoutParams =
-  | CreateMobilePayoutParams
-  | CreateBankPayoutParams;
 
 export interface Payout {
   reference: string;
@@ -76,15 +77,15 @@ export interface Payout {
     account?: string;
     bank?: string;
   };
-  external_reference?: string;
-  failure_reason?: string;
+  externalReference?: string;
+  failureReason?: string;
   metadata?: Record<string, unknown>;
 }
 
 export interface PayoutFee {
   amount: number;
-  fee_amount: number;
-  total_amount: number;
+  feeAmount: number;
+  totalAmount: number;
   currency: "TZS";
 }
 

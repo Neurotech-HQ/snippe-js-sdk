@@ -2,7 +2,7 @@
  * 05 — Custom-amount session (donation / tip jar)
  *
  * When the customer picks the amount (donations, tips, pay-what-you-want),
- * use `allow_custom_amount: true` with `min_amount` and `max_amount`
+ * use `allowCustomAmount: true` with `minAmount` and `maxAmount`
  * instead of a fixed `amount`.
  */
 import { Snippe } from "../src";
@@ -13,18 +13,18 @@ const snippe = new Snippe({
 });
 
 async function main() {
-  const session = await snippe.sessions.create({
-    allow_custom_amount: true,
-    min_amount: 1_000, // 1,000 TZS
-    max_amount: 500_000, // 500,000 TZS
-    allowed_methods: ["mobile_money", "qr"],
+  const session = await snippe.checkout.create({
+    allowCustomAmount: true,
+    minAmount: 1_000, // 1,000 TZS
+    maxAmount: 500_000, // 500,000 TZS
+    allowedMethods: ["mobile_money", "card"],
     description: "Donate to School Supplies Fund",
     metadata: { campaign: "school-2026" },
   });
 
   console.log("Public donation page:");
-  console.log(" ", session.payment_link_url);
-  console.log(`Accepts amounts between ${session.min_amount} and ${session.max_amount} TZS.`);
+  console.log(" ", session.paymentLinkUrl);
+  console.log(`Accepts amounts between ${session.minAmount} and ${session.maxAmount} TZS.`);
 }
 
 function requireEnv(name: string): string {

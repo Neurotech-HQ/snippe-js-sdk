@@ -17,21 +17,21 @@ import {
   SnippeError,
   SnippeRateLimitError,
   generateIdempotencyKey,
-  type CreatePaymentParams,
+  type CreateMobilePaymentInput,
   type Payment,
 } from "../src";
 
 const snippe = new Snippe({ apiKey: requireEnv("SNIPPE_API_KEY") });
 
-async function createWithRetry(
-  params: CreatePaymentParams,
+async function createMobileWithRetry(
+  input: CreateMobilePaymentInput,
   maxAttempts = 6,
 ): Promise<Payment> {
   const idempotencyKey = generateIdempotencyKey(); // stable across retries
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      return await snippe.payments.create(params, { idempotencyKey });
+      return await snippe.payments.mobile.create(input, { idempotencyKey });
     } catch (err) {
       if (!(err instanceof SnippeError)) throw err;
 
@@ -60,11 +60,10 @@ async function createWithRetry(
 }
 
 async function main() {
-  const payment = await createWithRetry({
-    payment_type: "mobile",
-    details: { amount: 500 },
-    phone_number: "255781000000",
-    customer: { firstname: "Jane", lastname: "Doe", email: "jane@example.com" },
+  const payment = await createMobileWithRetry({
+    amount: 500,
+    phoneNumber: "0781000000",
+    customer: { firstName: "Jane", lastName: "Doe", email: "jane@example.com" },
   });
   console.log("Created:", payment.reference, payment.status);
 }

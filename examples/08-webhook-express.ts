@@ -19,8 +19,8 @@ import { SnippeWebhookVerificationError, verifyWebhook } from "../src";
 
 const app = express();
 
-// In-memory dedupe for demo purposes. In production, persist to Redis
-// or a DB with a TTL of a few hours.
+// In-memory dedupe for illustration. In production, persist to Redis or a
+// DB with a TTL of a few hours so dedupe survives a process restart.
 const seenEventIds = new Set<string>();
 
 app.post(

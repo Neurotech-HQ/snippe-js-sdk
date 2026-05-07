@@ -13,22 +13,21 @@ const snippe = new Snippe({
 });
 
 async function main() {
-  const payment = await snippe.payments.create({
-    payment_type: "mobile",
-    details: { amount: 500 }, // TZS, integer
-    phone_number: "255781000000", // Airtel/M-Pesa/Mixx/Halotel auto-detected
+  const payment = await snippe.payments.mobile.create({
+    amount: 500, // TZS, integer (minimum 500)
+    phoneNumber: "0781000000", // any TZ format works (255…, +255…, 0…, bare)
     customer: {
-      firstname: "Jane",
-      lastname: "Doe",
+      firstName: "Jane",
+      lastName: "Doe",
       email: "jane@example.com",
     },
-    metadata: { order_id: "ORD-12345" },
+    metadata: { orderId: "ORD-12345" },
   });
 
   console.log("Created payment:");
   console.log("  reference :", payment.reference);
   console.log("  status    :", payment.status); // "pending"
-  console.log("  expires   :", payment.expires_at);
+  console.log("  expires   :", payment.expiresAt);
   console.log("Customer now sees a USSD push on their phone.");
 }
 

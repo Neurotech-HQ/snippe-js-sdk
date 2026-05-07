@@ -32,7 +32,6 @@ npx tsx examples/01-mobile-money.ts
 | -- | ---- | -------- |
 | 01 | [01-mobile-money.ts](./01-mobile-money.ts) | USSD push to an M-Pesa/Airtel/Mixx/Halotel wallet. |
 | 02 | [02-card-payment.ts](./02-card-payment.ts) | Card (Visa/Mastercard) redirect checkout. |
-| 03 | [03-dynamic-qr.ts](./03-dynamic-qr.ts) | Dynamic QR for scan-to-pay. |
 | 04 | [04-checkout-session.ts](./04-checkout-session.ts) | Hosted checkout session you can share via SMS/WhatsApp. |
 | 05 | [05-custom-amount-session.ts](./05-custom-amount-session.ts) | Donation / tip-jar session with min/max. |
 | 06 | [06-payout-mobile.ts](./06-payout-mobile.ts) | Mobile-money payout with fee-preflight and balance check. |

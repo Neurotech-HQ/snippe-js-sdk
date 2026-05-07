@@ -1,12 +1,13 @@
 export { Snippe } from "./client";
 export { PaymentsResource } from "./resources/payments";
-export { SessionsResource } from "./resources/sessions";
+export { CheckoutResource } from "./resources/checkout";
 export { PayoutsResource } from "./resources/payouts";
 
 export { verifyWebhook, computeWebhookSignature } from "./webhooks";
 export type { VerifyWebhookOptions } from "./webhooks";
 
 export { generateIdempotencyKey } from "./http";
+export { normalisePhone } from "./internal/normalisePhone";
 
 export {
   SnippeError,
@@ -30,10 +31,9 @@ export type {
   PaymentType,
   PaymentStatus,
   PaymentCustomer,
-  CreatePaymentParams,
-  CreateMobilePaymentParams,
-  CreateCardPaymentParams,
-  CreateQrPaymentParams,
+  PaymentCustomerWithAddress,
+  CreateMobilePaymentInput,
+  CreateCardPaymentInput,
   Payment,
   Balance,
   ListPaymentsParams,
@@ -53,10 +53,10 @@ export type {
   PayoutChannel,
   MobileProvider,
   BankCode,
-  CreatePayoutParams,
-  CreateMobilePayoutParams,
-  CreateBankPayoutParams,
+  CreateMobilePayoutInput,
+  CreateBankPayoutInput,
   PayoutFee,
+  PayoutFeeInput,
   ListPayoutsParams,
   // Webhooks
   WebhookEvent,

@@ -4,6 +4,7 @@
     "snippe-integration": {
       "source": "Neurotech-HQ/skills",
       "sourceType": "github",
+      "skillPath": "snippe-integration/SKILL.md",
       "computedHash": "04ba6efc2e5d0d036deb6cc5d2a87545625b423021a9a89164bc4c8f062741e7"
     }
   }

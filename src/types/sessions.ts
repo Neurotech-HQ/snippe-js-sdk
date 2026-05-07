@@ -1,4 +1,5 @@
-export type SessionPaymentMethod = "mobile_money" | "qr" | "card";
+/** Wire-format payment-method values accepted by the Sessions API. */
+export type SessionPaymentMethod = "mobile_money" | "card";
 
 export type SessionStatus =
   | "pending"
@@ -15,27 +16,27 @@ export interface SessionCustomer {
 
 interface BaseCreateSessionParams {
   currency?: "TZS";
-  allowed_methods?: SessionPaymentMethod[];
+  allowedMethods?: SessionPaymentMethod[];
   customer?: SessionCustomer;
-  redirect_url?: string;
-  webhook_url?: string;
+  redirectUrl?: string;
+  webhookUrl?: string;
   description?: string;
   metadata?: Record<string, unknown>;
   /** Seconds until the session expires (default 3600). */
-  expires_in?: number;
+  expiresIn?: number;
   /** Reference a payment profile created in the Snippe dashboard. */
-  profile_id?: string;
+  profileId?: string;
 }
 
 export interface CreateFixedAmountSessionParams extends BaseCreateSessionParams {
   amount: number;
-  allow_custom_amount?: false;
+  allowCustomAmount?: false;
 }
 
 export interface CreateCustomAmountSessionParams extends BaseCreateSessionParams {
-  allow_custom_amount: true;
-  min_amount: number;
-  max_amount: number;
+  allowCustomAmount: true;
+  minAmount: number;
+  maxAmount: number;
   amount?: never;
 }
 
@@ -48,13 +49,13 @@ export interface Session {
   status: SessionStatus;
   amount?: number;
   currency: "TZS";
-  checkout_url: string;
-  short_code: string;
-  payment_link_url: string;
-  expires_at: string;
-  allow_custom_amount?: boolean;
-  min_amount?: number;
-  max_amount?: number;
+  checkoutUrl: string;
+  shortCode: string;
+  paymentLinkUrl: string;
+  expiresAt: string;
+  allowCustomAmount?: boolean;
+  minAmount?: number;
+  maxAmount?: number;
   metadata?: Record<string, unknown>;
 }
 

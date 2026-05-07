@@ -1,38 +1,30 @@
-import type { HttpClient } from "../http";
+import type { HttpClient } from "../../http";
 import type {
   Balance,
-  CreatePaymentParams,
   ListPaymentsParams,
   Payment,
   RequestOptions,
   ResolvedSnippeConfig,
   SearchPaymentsParams,
-} from "../types";
+} from "../../types";
+import { CardPayments } from "./card";
+import { MobilePayments } from "./mobile";
 
+/**
+ * Composer over the per-channel sub-resources. Use `.mobile` or `.card` to
+ * create a payment for that channel; the cross-channel reads (`get`, `list`,
+ * `search`, `balance`, `retriggerPush`) live here directly.
+ */
 export class PaymentsResource {
+  readonly mobile: MobilePayments;
+  readonly card: CardPayments;
+
   constructor(
     private readonly http: HttpClient,
-    private readonly config: ResolvedSnippeConfig,
-  ) {}
-
-  /**
-   * Create a payment intent. The response is always `pending`; the terminal
-   * state arrives via webhook or by polling `get(reference)`.
-   *
-   * Auto-applies `details.currency = "TZS"` and the SDK-level `webhookUrl`
-   * default if neither is set on the call.
-   */
-  async create(
-    params: CreatePaymentParams,
-    options?: RequestOptions,
-  ): Promise<Payment> {
-    const body = this.normalise(params);
-    return this.http.request<Payment>({
-      method: "POST",
-      path: "/v1/payments",
-      body,
-      options,
-    });
+    config: ResolvedSnippeConfig,
+  ) {
+    this.mobile = new MobilePayments(http, config);
+    this.card = new CardPayments(http, config);
   }
 
   /** Fetch a single payment by reference. */
@@ -90,13 +82,7 @@ export class PaymentsResource {
       options,
     });
   }
-
-  private normalise(params: CreatePaymentParams): CreatePaymentParams {
-    const details = {
-      currency: "TZS" as const,
-      ...params.details,
-    };
-    const webhook_url = params.webhook_url ?? this.config.webhookUrl;
-    return { ...params, details, webhook_url } as CreatePaymentParams;
-  }
 }
+
+export { CardPayments } from "./card";
+export { MobilePayments } from "./mobile";
