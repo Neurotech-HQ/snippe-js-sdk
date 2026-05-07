@@ -7,11 +7,10 @@ describe("Idempotency keys", () => {
     const mock = createMockFetch([{ status: 201, body: successEnvelope({ reference: "pi_1" }) }]);
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
 
-    await snippe.payments.create({
-      payment_type: "mobile",
-      details: { amount: 500 },
-      phone_number: "255781000000",
-      customer: { firstname: "A", lastname: "B", email: "a@b.co" },
+    await snippe.payments.mobile.create({
+      amount: 500,
+      phoneNumber: "255781000000",
+      customer: { firstName: "A", lastName: "B", email: "a@b.co" },
     });
 
     const key = mock.lastRequest().headers["idempotency-key"];
@@ -24,12 +23,11 @@ describe("Idempotency keys", () => {
     const mock = createMockFetch([{ status: 201, body: successEnvelope({ reference: "pi_1" }) }]);
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
 
-    await snippe.payments.create(
+    await snippe.payments.mobile.create(
       {
-        payment_type: "mobile",
-        details: { amount: 500 },
-        phone_number: "255781000000",
-        customer: { firstname: "A", lastname: "B", email: "a@b.co" },
+        amount: 500,
+        phoneNumber: "255781000000",
+        customer: { firstName: "A", lastName: "B", email: "a@b.co" },
       },
       { idempotencyKey: "ord-123-t1" },
     );
@@ -43,12 +41,11 @@ describe("Idempotency keys", () => {
 
     const longKey = "a".repeat(31);
     await expect(
-      snippe.payments.create(
+      snippe.payments.mobile.create(
         {
-          payment_type: "mobile",
-          details: { amount: 500 },
-          phone_number: "255781000000",
-          customer: { firstname: "A", lastname: "B", email: "a@b.co" },
+          amount: 500,
+          phoneNumber: "255781000000",
+          customer: { firstName: "A", lastName: "B", email: "a@b.co" },
         },
         { idempotencyKey: longKey },
       ),

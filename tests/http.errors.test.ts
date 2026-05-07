@@ -30,11 +30,10 @@ describe("HTTP error handling", () => {
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
 
     await expect(
-      snippe.payouts.send({
+      snippe.payouts.mobile.send({
         amount: 5000,
-        channel: "mobile",
-        recipient_phone: "255781000000",
-        recipient_name: "R",
+        phoneNumber: "255781000000",
+        recipientName: "R",
       }),
     ).rejects.toMatchObject({ status: 403, errorCode: "insufficient_scope" });
   });
@@ -55,11 +54,10 @@ describe("HTTP error handling", () => {
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
 
     await expect(
-      snippe.payments.create({
-        payment_type: "mobile",
-        details: { amount: 500 },
-        phone_number: "255781000000",
-        customer: { firstname: "A", lastname: "B", email: "a@b.co" },
+      snippe.payments.mobile.create({
+        amount: 500,
+        phoneNumber: "255781000000",
+        customer: { firstName: "A", lastName: "B", email: "a@b.co" },
       }),
     ).rejects.toBeInstanceOf(SnippeValidationError);
   });

@@ -51,11 +51,10 @@ describe("HTTP client", () => {
     const mock = createMockFetch([{ status: 201, body: successEnvelope({ reference: "pi_1", status: "pending" }) }]);
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
 
-    await snippe.payments.create({
-      payment_type: "mobile",
-      details: { amount: 500 },
-      phone_number: "255781000000",
-      customer: { firstname: "A", lastname: "B", email: "a@b.co" },
+    await snippe.payments.mobile.create({
+      amount: 500,
+      phoneNumber: "255781000000",
+      customer: { firstName: "A", lastName: "B", email: "a@b.co" },
     });
 
     const req = mock.lastRequest();
@@ -67,13 +66,12 @@ describe("HTTP client", () => {
     });
   });
 
-  it("passes non-enveloped responses through unchanged", async () => {
-    // Sessions API returns responses with `code` + `data` but no `status: success` marker documented
-    const payload = { reference: "sess_1", status: "pending", checkout_url: "https://snippe.me/c/x" };
-    const mock = createMockFetch([{ status: 201, body: payload }]);
+  it("camelCases non-enveloped responses (e.g. Sessions API)", async () => {
+    const wirePayload = { reference: "sess_1", status: "pending", checkout_url: "https://snippe.me/c/x" };
+    const mock = createMockFetch([{ status: 201, body: wirePayload }]);
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
 
-    const result = await snippe.sessions.get("sess_1");
-    expect(result).toEqual(payload);
+    const result = await snippe.checkout.get("sess_1");
+    expect(result).toEqual({ reference: "sess_1", status: "pending", checkoutUrl: "https://snippe.me/c/x" });
   });
 });

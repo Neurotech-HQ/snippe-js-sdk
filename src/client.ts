@@ -1,7 +1,7 @@
 import { HttpClient } from "./http";
+import { CheckoutResource } from "./resources/checkout";
 import { PaymentsResource } from "./resources/payments";
 import { PayoutsResource } from "./resources/payouts";
-import { SessionsResource } from "./resources/sessions";
 import type {
   Environment,
   ResolvedSnippeConfig,
@@ -15,6 +15,8 @@ const DEFAULT_BASE_URLS: Record<Environment, string> = {
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
+let sessionsAliasWarned = false;
+
 /**
  * Snippe SDK client.
  *
@@ -22,18 +24,17 @@ const DEFAULT_TIMEOUT_MS = 30_000;
  * ```ts
  * const snippe = new Snippe({ apiKey: process.env.SNIPPE_API_KEY! });
  *
- * const payment = await snippe.payments.create({
- *   payment_type: "mobile",
- *   details: { amount: 500 },
- *   phone_number: "255781000000",
- *   customer: { firstname: "Jane", lastname: "Doe", email: "jane@example.com" },
- *   webhook_url: "https://example.com/webhooks/snippe",
+ * const payment = await snippe.payments.mobile.create({
+ *   amount: 500,
+ *   phoneNumber: "0781000000",
+ *   customer: { firstName: "Jane", lastName: "Doe", email: "jane@example.com" },
+ *   webhookUrl: "https://example.com/webhooks/snippe",
  * });
  * ```
  */
 export class Snippe {
   readonly payments: PaymentsResource;
-  readonly sessions: SessionsResource;
+  readonly checkout: CheckoutResource;
   readonly payouts: PayoutsResource;
 
   private readonly config: ResolvedSnippeConfig;
@@ -58,8 +59,23 @@ export class Snippe {
 
     this.http = new HttpClient(this.config);
     this.payments = new PaymentsResource(this.http, this.config);
-    this.sessions = new SessionsResource(this.http, this.config);
+    this.checkout = new CheckoutResource(this.http, this.config);
     this.payouts = new PayoutsResource(this.http, this.config);
+  }
+
+  /**
+   * @deprecated Use `snippe.checkout` instead. The `sessions` alias will be
+   * removed in v2.0. A console warning is logged once per process on first use.
+   */
+  get sessions(): CheckoutResource {
+    if (!sessionsAliasWarned) {
+      sessionsAliasWarned = true;
+      console.warn(
+        "[@snippe/sdk] `snippe.sessions` is deprecated; use `snippe.checkout` instead. " +
+          "This alias will be removed in v2.0.",
+      );
+    }
+    return this.checkout;
   }
 
   getConfig(): Readonly<ResolvedSnippeConfig> {

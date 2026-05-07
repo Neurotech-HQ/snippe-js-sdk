@@ -2,9 +2,9 @@
  * 02 — Card payment (Visa / Mastercard / local debit)
  *
  * Card payments require the full customer address block. Redirect the
- * customer to `payment_url` — Snippe's upstream processor hosts the
+ * customer to `paymentUrl` — Snippe's upstream processor hosts the
  * PCI-scoped card form. After the customer authorises, they come back
- * to `redirect_url` (success) or `cancel_url` (abandon/decline).
+ * to `redirectUrl` (success) or `cancelUrl` (abandon/decline).
  *
  * Always trust the webhook, not the browser redirect, for settlement
  * state — the redirect can be spoofed or skipped.
@@ -17,17 +17,14 @@ const snippe = new Snippe({
 });
 
 async function main() {
-  const payment = await snippe.payments.create({
-    payment_type: "card",
-    details: {
-      amount: 25_000, // 25,000 TZS
-      redirect_url: "https://example.com/payments/success",
-      cancel_url: "https://example.com/payments/cancelled",
-    },
-    phone_number: "255781000000",
+  const payment = await snippe.payments.card.create({
+    amount: 25_000, // 25,000 TZS
+    phoneNumber: "0781000000",
+    redirectUrl: "https://example.com/payments/success",
+    cancelUrl: "https://example.com/payments/cancelled",
     customer: {
-      firstname: "Jane",
-      lastname: "Doe",
+      firstName: "Jane",
+      lastName: "Doe",
       email: "jane@example.com",
       address: "123 Samora Ave",
       city: "Dar es Salaam",
@@ -35,11 +32,11 @@ async function main() {
       postcode: "14101",
       country: "TZ", // ISO 3166-1 alpha-2
     },
-    metadata: { order_id: "ORD-CARD-001" },
+    metadata: { orderId: "ORD-CARD-001" },
   });
 
   console.log("Redirect the customer to:");
-  console.log(" ", payment.payment_url);
+  console.log(" ", payment.paymentUrl);
   console.log("Reference (store this for reconciliation):", payment.reference);
 }
 

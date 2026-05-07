@@ -17,7 +17,7 @@ Node 18+ is required (the SDK uses the global `fetch`).
 
 ## Examples
 
-Runnable integration scenarios live in [`examples/`](./examples) — mobile money, card, QR, hosted checkout, donation sessions, mobile and bank payouts, a webhook handler (Express), a retry loop, and polling-based reconciliation.
+Runnable integration scenarios live in [`examples/`](./examples) — mobile money, card, hosted checkout, donation sessions, mobile and bank payouts, a webhook handler (Express), a retry loop, and polling-based reconciliation.
 
 ```bash
 export SNIPPE_API_KEY="snp_..."

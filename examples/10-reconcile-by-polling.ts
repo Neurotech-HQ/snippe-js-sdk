@@ -1,10 +1,9 @@
 /**
  * 10 — Reconciliation by polling
  *
- * Webhooks are the recommended way to learn a payment's terminal state,
- * but sometimes they aren't viable (no public URL, scheduled reconciliation
- * job, investigating a stuck payment, etc.). This polls `payments.get`
- * until the payment reaches a terminal state or the deadline expires.
+ * Webhooks are the recommended way to learn a payment's terminal state.
+ * When they aren't viable (no public URL, scheduled reconciliation job,
+ * investigating a stuck payment), poll `payments.get` until terminal.
  *
  * Snippe mobile payments expire after 4 hours if not authorised, so that's
  * the natural upper bound for polling.
@@ -42,7 +41,7 @@ async function waitForTerminalState(
 
 async function main() {
   // Replace with a real reference from your records — typically from a
-  // prior `payments.create` call.
+  // prior `payments.mobile.create` call.
   const reference = process.argv[2] ?? requireEnv("PAYMENT_REFERENCE");
 
   console.log(`Polling ${reference}…`);

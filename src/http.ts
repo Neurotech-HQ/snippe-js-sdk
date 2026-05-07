@@ -4,6 +4,7 @@ import {
   SnippeRateLimitError,
   SnippeValidationError,
 } from "./errors";
+import { toCamelCase, toSnakeCase } from "./internal/caseMap";
 import type {
   RateLimitInfo,
   RequestOptions,
@@ -12,7 +13,7 @@ import type {
   SnippeErrorEnvelope,
 } from "./types";
 
-const SDK_VERSION = "0.2.0";
+const SDK_VERSION = "1.0.0";
 const USER_AGENT = `@snippe/sdk/${SDK_VERSION}`;
 const MAX_IDEMPOTENCY_KEY_LENGTH = 30;
 
@@ -44,7 +45,10 @@ export class HttpClient {
       response = await this.config.fetch(url, {
         method: req.method,
         headers,
-        body: req.body === undefined ? undefined : JSON.stringify(req.body),
+        body:
+          req.body === undefined
+            ? undefined
+            : JSON.stringify(toSnakeCase(req.body)),
         signal,
       });
     } catch (err) {
@@ -94,9 +98,9 @@ export class HttpClient {
     }
 
     if (isSuccessEnvelope<T>(parsed)) {
-      return parsed.data;
+      return toCamelCase(parsed.data) as T;
     }
-    return parsed as T;
+    return toCamelCase(parsed) as T;
   }
 
   private buildUrl(path: string, query?: Record<string, unknown>): string {
@@ -104,7 +108,8 @@ export class HttpClient {
     const normalisedPath = path.startsWith("/") ? path : `/${path}`;
     const url = new URL(base + normalisedPath);
     if (query) {
-      for (const [key, value] of Object.entries(query)) {
+      const snaked = toSnakeCase(query) as Record<string, unknown>;
+      for (const [key, value] of Object.entries(snaked)) {
         if (value === undefined || value === null) continue;
         url.searchParams.append(key, String(value));
       }

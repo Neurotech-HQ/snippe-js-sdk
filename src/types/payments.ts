@@ -1,6 +1,6 @@
 import type { Money } from "./index";
 
-export type PaymentType = "mobile" | "card" | "dynamic-qr";
+export type PaymentType = "mobile" | "card";
 
 export type PaymentStatus =
   | "pending"
@@ -9,9 +9,14 @@ export type PaymentStatus =
   | "voided"
   | "expired";
 
+/**
+ * Customer details attached to a payment. Mobile payments only require
+ * `firstName`, `lastName`, and `email`; card payments additionally require
+ * the full billing address (see `PaymentCustomerWithAddress`).
+ */
 export interface PaymentCustomer {
-  firstname: string;
-  lastname: string;
+  firstName: string;
+  lastName: string;
   email: string;
   address?: string;
   city?: string;
@@ -21,63 +26,42 @@ export interface PaymentCustomer {
   country?: string;
 }
 
-export interface CreateMobilePaymentParams {
-  payment_type: "mobile";
-  details: { amount: number; currency?: "TZS" };
-  phone_number: string;
+/** Card payments require the full billing address. */
+export type PaymentCustomerWithAddress = PaymentCustomer &
+  Required<
+    Pick<PaymentCustomer, "address" | "city" | "state" | "postcode" | "country">
+  >;
+
+export interface CreateMobilePaymentInput {
+  amount: number;
+  phoneNumber: string;
   customer: PaymentCustomer;
-  webhook_url?: string;
+  webhookUrl?: string;
   metadata?: Record<string, unknown>;
 }
 
-export interface CreateCardPaymentParams {
-  payment_type: "card";
-  details: {
-    amount: number;
-    currency?: "TZS";
-    redirect_url: string;
-    cancel_url: string;
-  };
-  phone_number: string;
-  customer: PaymentCustomer &
-    Required<Pick<PaymentCustomer, "address" | "city" | "state" | "postcode" | "country">>;
-  webhook_url?: string;
+export interface CreateCardPaymentInput {
+  amount: number;
+  phoneNumber: string;
+  redirectUrl: string;
+  cancelUrl: string;
+  customer: PaymentCustomerWithAddress;
+  webhookUrl?: string;
   metadata?: Record<string, unknown>;
 }
-
-export interface CreateQrPaymentParams {
-  payment_type: "dynamic-qr";
-  details: {
-    amount: number;
-    currency?: "TZS";
-    redirect_url?: string;
-    cancel_url?: string;
-  };
-  phone_number?: string;
-  customer?: PaymentCustomer;
-  webhook_url?: string;
-  metadata?: Record<string, unknown>;
-}
-
-export type CreatePaymentParams =
-  | CreateMobilePaymentParams
-  | CreateCardPaymentParams
-  | CreateQrPaymentParams;
 
 export interface Payment {
   reference: string;
   status: PaymentStatus;
-  payment_type: PaymentType;
+  paymentType: PaymentType;
   amount: Money;
-  expires_at: string;
-  api_version?: string;
+  expiresAt: string;
+  apiVersion?: string;
   object?: "payment";
-  /** Card / QR only — hosted checkout URL. */
-  payment_url?: string;
-  /** Card / QR only — short numeric token. */
-  payment_token?: string;
-  /** Dynamic QR only — raw EMV QR payload to render as an image. */
-  payment_qr_code?: string;
+  /** Card only — hosted checkout URL the customer must be redirected to. */
+  paymentUrl?: string;
+  /** Card only — short numeric token. */
+  paymentToken?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -91,14 +75,14 @@ export interface ListPaymentsParams {
   limit?: number;
   offset?: number;
   status?: PaymentStatus;
-  payment_type?: PaymentType;
+  paymentType?: PaymentType;
 }
 
 export interface SearchPaymentsParams {
   q?: string;
   reference?: string;
-  external_reference?: string;
-  phone_number?: string;
+  externalReference?: string;
+  phoneNumber?: string;
   status?: PaymentStatus;
   limit?: number;
 }

@@ -7,13 +7,18 @@ import type {
   Session,
 } from "../types";
 
-export class SessionsResource {
+/**
+ * Hosted checkout — Snippe renders the payment UI on its own page and
+ * handles method selection (mobile money, card). Returns a `paymentLinkUrl`
+ * you can share via SMS / WhatsApp, or a `checkoutUrl` to embed.
+ */
+export class CheckoutResource {
   constructor(
     private readonly http: HttpClient,
     private readonly config: ResolvedSnippeConfig,
   ) {}
 
-  /** Create a hosted checkout session. Returns `checkout_url` and `payment_link_url`. */
+  /** Create a hosted checkout session. Returns `checkoutUrl` and `paymentLinkUrl`. */
   async create(
     params: CreateSessionParams,
     options?: RequestOptions,
@@ -21,7 +26,7 @@ export class SessionsResource {
     const body = {
       currency: "TZS" as const,
       ...params,
-      webhook_url: params.webhook_url ?? this.config.webhookUrl,
+      webhookUrl: params.webhookUrl ?? this.config.webhookUrl,
     };
     return this.http.request<Session>({
       method: "POST",
