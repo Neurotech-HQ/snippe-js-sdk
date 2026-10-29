@@ -62,8 +62,8 @@ app.post(
         break;
       }
       case "payment.failed":
-      case "payment.expired":
-      case "payment.voided":
+      case "payment.cancelled":
+      case "payment.reversed":
         console.log(`✗ Payment ${event.data.reference} ${event.type}`);
         break;
       case "payout.completed":

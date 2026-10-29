@@ -1,10 +1,14 @@
 import type { HttpClient } from "../../http";
+import { normalisePhone } from "../../internal/normalisePhone";
 import type {
   Balance,
   ListPaymentsParams,
+  Page,
   Payment,
+  PushResult,
   RequestOptions,
   ResolvedSnippeConfig,
+  RetriggerPushInput,
   SearchPaymentsParams,
 } from "../../types";
 import { CardPayments } from "./card";
@@ -36,12 +40,12 @@ export class PaymentsResource {
     });
   }
 
-  /** List payments (paginated). */
+  /** List payments (offset-paginated, max 100 per page). */
   async list(
     params: ListPaymentsParams = {},
     options?: RequestOptions,
-  ): Promise<Payment[]> {
-    return this.http.request<Payment[]>({
+  ): Promise<Page<Payment>> {
+    return this.http.request<Page<Payment>>({
       method: "GET",
       path: "/v1/payments",
       query: params as Record<string, unknown>,
@@ -49,14 +53,15 @@ export class PaymentsResource {
     });
   }
 
-  /** Search payments by reference, phone, status, etc. */
+  /** Search payments by (partial) reference and/or payer phone. */
   async search(
     params: SearchPaymentsParams,
     options?: RequestOptions,
-  ): Promise<Payment[]> {
-    return this.http.request<Payment[]>({
+  ): Promise<Page<Payment>> {
+    // Search is only mounted under /api/v1; it accepts the same API keys.
+    return this.http.request<Page<Payment>>({
       method: "GET",
-      path: "/v1/payments/search",
+      path: "/api/v1/payments/search",
       query: params as Record<string, unknown>,
       options,
     });
@@ -65,11 +70,15 @@ export class PaymentsResource {
   /** Re-trigger the USSD push for a pending mobile payment. */
   async retriggerPush(
     reference: string,
+    input: RetriggerPushInput = {},
     options?: RequestOptions,
-  ): Promise<Payment> {
-    return this.http.request<Payment>({
+  ): Promise<PushResult> {
+    return this.http.request<PushResult>({
       method: "POST",
       path: `/v1/payments/${encodeURIComponent(reference)}/push`,
+      body: input.phoneNumber
+        ? { phone: normalisePhone(input.phoneNumber) }
+        : undefined,
       options,
     });
   }

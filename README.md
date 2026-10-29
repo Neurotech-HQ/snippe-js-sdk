@@ -2,10 +2,12 @@
 
 Official JavaScript / TypeScript SDK for [Snippe](https://snippe.sh) — the Tanzania payment platform (mobile money, cards, and payouts).
 
-- API version: `2026-01-25`
+- API version: `2026-01-25` — response and webhook shapes follow your **account's** API version setting (Dashboard → Settings → API version). Make sure it is on `2026-01-25`; the SDK's types describe that format.
 - Works in Node.js 18+ (uses built-in `fetch`)
 - Fully typed, ESM + CJS, zero runtime dependencies
 
+> **Upgrading from v1.0?** v1.1 fixes list/search/cancel return shapes, statuses and webhook event names to match the API — see the top of [MIGRATION.md](https://github.com/Neurotech-HQ/snippe-js-sdk/blob/main/MIGRATION.md).
+>
 > **Migrating from v0.2.x?** The v1.0 release is breaking — channel-namespaced methods (`payments.mobile.create` instead of `payments.create({ payment_type: "mobile" })`) and camelCase fields throughout. See [MIGRATION.md](https://github.com/Neurotech-HQ/snippe-js-sdk/blob/main/MIGRATION.md).
 
 ## Install
@@ -53,7 +55,7 @@ Listen for `payment.completed` / `payment.failed` events at `webhookUrl`. The SD
 
 If you genuinely can't receive webhooks (no public URL, scheduled reconciliation job), see the [polling example](https://github.com/Neurotech-HQ/snippe-js-sdk/tree/main/examples) for the `payments.get`-in-a-loop pattern.
 
-The SDK auto-generates a short `Idempotency-Key` (≤30 chars) for every `POST`. Pass your own via the request options:
+The SDK auto-generates an `Idempotency-Key` (24 chars; the API allows up to 64) for every `POST`. Pass your own via the request options:
 
 ```ts
 await snippe.payments.mobile.create(input, { idempotencyKey: "ord-12345-t1" });
@@ -67,17 +69,21 @@ Each payment channel has its own typed method — no string discriminators:
 
 ```ts
 await snippe.payments.mobile.create({ amount, phoneNumber, customer });
-await snippe.payments.card.create({ amount, phoneNumber, redirectUrl, cancelUrl, customer });
+await snippe.payments.card.create({ amount, phoneNumber, redirectUrl, customer }); // cancelUrl optional
 
 // Cross-channel reads
 await snippe.payments.get(reference);
-await snippe.payments.list({ limit: 20, status: "completed" });
-await snippe.payments.search({ phoneNumber: "255781000000" });
-await snippe.payments.retriggerPush(reference);
+const { items, total } = await snippe.payments.list({ limit: 20, status: "completed", fromDate: "2026-01-01" });
+await snippe.payments.search({ phone: "781000000" }); // partial match on reference and/or phone
+await snippe.payments.retriggerPush(reference); // or { phoneNumber } to push to another number
 await snippe.payments.balance();
 ```
 
 Card payments require the full billing address (`address`, `city`, `state`, `postcode`, `country`); the type system enforces this at compile time.
+
+Payment statuses are `pending`, `completed`, `failed`, `cancelled` (includes expired), and `reversed`.
+
+Pass `subaccount` (a wallet id or reference) to `create()` to settle into a specific wallet instead of your default one.
 
 ### Hosted checkout
 
@@ -96,6 +102,17 @@ const session = await snippe.checkout.create({
 console.log(session.paymentLinkUrl);
 ```
 
+Line items, custom checkout fields and layout are optional and presentational — the session always charges `amount`:
+
+```ts
+await snippe.checkout.create({
+  amount: 250_000,
+  lineItems: [{ name: "Headphones", quantity: 1, unitPrice: 250_000, imageUrl: "https://cdn.example.com/h.jpg" }],
+  customFields: [{ key: "delivery_address", label: "Delivery address", type: "textarea", required: true }],
+  display: { lineItemsStyle: "cards" },
+});
+```
+
 Custom-amount (donation / tip jar) sessions:
 
 ```ts
@@ -107,7 +124,7 @@ await snippe.checkout.create({
 });
 ```
 
-Other operations: `get`, `list`, `cancel`.
+Other operations: `get`, `list` (returns `{ sessions, pagination }`), and `cancel` (resolves to `undefined` — call `get` if you need the new state).
 
 ### Disbursements (payouts)
 
@@ -115,7 +132,7 @@ Same channel-namespaced shape. Always preflight with `fee()` + `balance()` befor
 
 ```ts
 const amount = 50_000;
-const { totalAmount } = await snippe.payouts.mobile.fee({ amount });
+const { totalAmount } = await snippe.payouts.mobile.fee({ amount, phoneNumber: "0781000000" });
 const { available } = await snippe.payments.balance();
 
 if (available.value < totalAmount) {
@@ -138,8 +155,11 @@ await snippe.payouts.bank.send({
   bankCode: "CRDB",
   accountNumber: "0150000000000",
   accountName: "Vendor Ltd",
+  narration: "Invoice INV-001",
 });
 ```
+
+`narration` is required by the API for both channels. Pass `subaccount` to pay out of a specific wallet. Reads: `payouts.get(reference)` and `payouts.list({ search, startDate, endDate, limit, offset })`, which returns `{ items, total, limit, offset }`.
 
 The SDK validates client-side that payment amounts ≥ 500 TZS and payouts ≥ 5000 TZS before hitting the wire — saves a round trip and an idempotency-key burn.
 
@@ -174,6 +194,8 @@ app.post(
           console.log("paid", event.data.reference, event.data.amount.value);
           break;
         case "payment.failed":
+        case "payment.cancelled":
+        case "payment.reversed":
           break;
         case "payout.completed":
           break;
@@ -214,14 +236,14 @@ try {
   } else if (err instanceof SnippeValidationError) {
     // fix the request, don't retry
   } else if (err instanceof SnippeError && err.retryable) {
-    // 5xx / PAY_001 / network — retry with the same idempotency key
+    // 429 / 5xx / network / timeout — retry with the same idempotency key
   } else {
     throw err;
   }
 }
 ```
 
-> **`PAY_001` gotcha**: the single most common cause is an `Idempotency-Key` longer than 30 characters. The SDK auto-generates 24-char keys, and it proactively rejects oversized user-supplied keys before they hit the wire.
+API error codes follow `DOMAIN_NNN` (`VAL_001` validation, `AUTH_007` invalid API key, `PAY_004` insufficient funds, `RATE_001` rate limited, …). A `422` with `PAY_001` is a refusal (e.g. amount outside the allowed range) and is **not** retryable.
 
 ## Configuration
 
@@ -240,7 +262,7 @@ try {
 import { normalisePhone, generateIdempotencyKey } from "@snippe/sdk";
 
 normalisePhone("0781000000"); // "255781000000"
-generateIdempotencyKey();      // "snp-…" (≤30 chars)
+generateIdempotencyKey();      // "snp-…" (24 chars)
 ```
 
 ## Examples

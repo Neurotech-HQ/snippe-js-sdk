@@ -35,6 +35,7 @@ export class BankPayouts {
       narration: input.narration,
       webhookUrl: input.webhookUrl ?? this.config.webhookUrl,
       metadata: input.metadata,
+      subaccount: input.subaccount,
     };
     return this.http.request<Payout>({
       method: "POST",
@@ -51,7 +52,7 @@ export class BankPayouts {
     return this.http.request<PayoutFee>({
       method: "GET",
       path: "/v1/payouts/fee",
-      query: { amount: input.amount },
+      query: { amount: input.amount, channel: "bank" },
       options,
     });
   }

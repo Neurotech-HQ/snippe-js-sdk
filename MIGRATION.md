@@ -1,3 +1,37 @@
+# Upgrading to v1.1
+
+v1.1 aligns the SDK with what the Snippe API actually returns. The old shapes never matched the API at runtime, so most of these changes fix code that was already broken. TypeScript will point at each call site.
+
+| Area | v1.0 | v1.1 |
+| --- | --- | --- |
+| `payments.list()` / `payouts.list()` | `Payment[]` / `Payout[]` | `{ items, total, limit, offset }` |
+| `checkout.list()` | `Session[]` | `{ sessions, pagination: { page, pageSize, total, totalPages } }` |
+| `checkout.cancel()` | `Session` | `void` (call `get()` for the new state) |
+| `payments.search()` | `{ q, phoneNumber, externalReference, … }` at `/v1/payments/search` (404) | `{ reference?, phone?, status?, limit?, offset? }` at `/api/v1/payments/search` |
+| `payouts.list()` filters | `status`, `channel` (ignored, wrong path) | `search`, `startDate`, `endDate` at `/api/v1/payouts` |
+| `payments.list()` filters | `paymentType` (ignored) | `search`, `fromDate`, `toDate` |
+| `payments.retriggerPush()` | `(ref, options)` → `Payment` | `(ref, { phoneNumber }?, options)` → `{ reference, externalReference, status, phone }` |
+| `payouts.*.send({ narration })` | optional (API returned 400 without it) | required |
+| `payouts.bank.fee()` | returned the mobile fee | sends `channel=bank` |
+| `payouts.mobile.fee()` | `{ amount }` | `{ amount, phoneNumber? }` (fee can vary by network) |
+| `PaymentStatus` | `voided`, `expired` | `cancelled`, `reversed` |
+| `PayoutStatus` | — | adds `processing`, `insufficient_balance` |
+| Webhook events | `payment.voided`, `payment.expired` | `payment.cancelled`, `payment.reversed` |
+| `WebhookPayoutData` | `recipient`, `fees`, `total`, `failed_at` | `customer`, `settlement`, `failure_code` |
+| Idempotency key limit | 30 chars | 64 chars |
+| `SnippeError.retryable` | `true` for any `PAY_001` | `true` for 429, 5xx, network and timeout only |
+
+New, non-breaking:
+
+- `subaccount` on `payments.mobile/card.create()` and `payouts.mobile/bank.send()`.
+- `cancelUrl` is optional for card payments.
+- `checkout.create()` accepts `lineItems`, `customFields`, `display`, `billing`, `displayCurrency`; `checkout.list()` accepts `sourceType`, `sourceId`.
+- `Payment`, `Payout`, and `Session` now type every field the API returns (`settlement`, `channel`, `customer`, `createdAt`, …).
+- `SnippeErrorCode` lists the API's `DOMAIN_NNN` codes.
+- More `BankCode` values.
+
+---
+
 # Migrating to v1.0
 
 `@snippe/sdk@1.0` is the first stable release. It introduces breaking changes around naming and API shape, but the upgrade is mechanical — most users finish in under 10 minutes.

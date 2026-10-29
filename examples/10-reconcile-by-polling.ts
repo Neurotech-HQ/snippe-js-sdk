@@ -15,8 +15,7 @@ const snippe = new Snippe({ apiKey: requireEnv("SNIPPE_API_KEY") });
 const TERMINAL_STATUSES: ReadonlySet<PaymentStatus> = new Set([
   "completed",
   "failed",
-  "voided",
-  "expired",
+  "cancelled",
 ]);
 
 async function waitForTerminalState(

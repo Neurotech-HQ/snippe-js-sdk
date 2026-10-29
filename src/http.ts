@@ -13,9 +13,9 @@ import type {
   SnippeErrorEnvelope,
 } from "./types";
 
-const SDK_VERSION = "1.0.0";
+const SDK_VERSION = "1.1.0";
 const USER_AGENT = `@snippe/sdk/${SDK_VERSION}`;
-const MAX_IDEMPOTENCY_KEY_LENGTH = 30;
+const MAX_IDEMPOTENCY_KEY_LENGTH = 64;
 
 export interface HttpRequest {
   method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
@@ -137,7 +137,7 @@ export class HttpClient {
         throw new SnippeValidationError({
           status: 0,
           errorCode: "validation_error",
-          message: `Idempotency-Key must be ≤ ${MAX_IDEMPOTENCY_KEY_LENGTH} characters (got ${key.length}). Long keys cause a cryptic PAY_001 error from the API.`,
+          message: `Idempotency-Key must be ≤ ${MAX_IDEMPOTENCY_KEY_LENGTH} characters (got ${key.length}).`,
         });
       }
       headers["Idempotency-Key"] = key;
@@ -151,10 +151,9 @@ function isSuccessEnvelope<T>(value: unknown): value is SnippeEnvelope<T> {
   if (typeof value !== "object" || value === null) return false;
   const obj = value as { status?: string; code?: unknown; data?: unknown };
   if (obj.status === "error") return false;
-  // Two envelope shapes observed in the Snippe API:
-  //   Payments/payouts/balance: { status: "success", code, data }
-  //   Sessions:                 { code, data }
-  // In both, `data` is present and `code` is numeric.
+  // Standard envelope: { status: "success", code, data }. `status` is also
+  // accepted as absent for older responses. Message-only successes (e.g.
+  // session cancel) omit `data` and fall through to the raw body.
   if (!("data" in obj)) return false;
   if (typeof obj.code !== "number") return false;
   return obj.status === "success" || obj.status === undefined;
@@ -238,7 +237,7 @@ function mergeSignals(
 }
 
 /**
- * Generate a random idempotency key that fits inside Snippe's 30-char limit.
+ * Generate a random idempotency key that fits inside Snippe's 64-char limit.
  * Format: `snp-` prefix (4) + 20 url-safe chars = 24 total.
  */
 export function generateIdempotencyKey(): string {

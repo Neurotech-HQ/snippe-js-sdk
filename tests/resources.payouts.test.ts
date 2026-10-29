@@ -25,6 +25,7 @@ describe("PayoutsResource — mobile", () => {
       phoneNumber: "0781000000",
       recipientName: "R",
       narration: "Salary January",
+      subaccount: "wallet_payroll",
     });
 
     expect(payout.reference).toBe("po_1");
@@ -39,6 +40,7 @@ describe("PayoutsResource — mobile", () => {
       recipient_phone: "255781000000",
       recipient_name: "R",
       narration: "Salary January",
+      subaccount: "wallet_payroll",
     });
     expect(req.headers["idempotency-key"]).toBeDefined();
   });
@@ -56,12 +58,14 @@ describe("PayoutsResource — mobile", () => {
     ]);
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
 
-    const fee = await snippe.payouts.mobile.fee({ amount: 50000 });
+    const fee = await snippe.payouts.mobile.fee({ amount: 50000, phoneNumber: "0781000000" });
     expect(fee.totalAmount).toBe(51000);
 
     const url = new URL(mock.lastRequest().url);
     expect(url.pathname).toBe("/v1/payouts/fee");
     expect(url.searchParams.get("amount")).toBe("50000");
+    expect(url.searchParams.get("channel")).toBe("mobile");
+    expect(url.searchParams.get("phone")).toBe("255781000000");
   });
 });
 
@@ -75,6 +79,7 @@ describe("PayoutsResource — min-amount validation", () => {
         amount: 4999,
         phoneNumber: "255781000000",
         recipientName: "R",
+        narration: "x",
       }),
     ).rejects.toBeInstanceOf(SnippeValidationError);
 
@@ -91,6 +96,7 @@ describe("PayoutsResource — min-amount validation", () => {
         bankCode: "CRDB",
         accountNumber: "0150300012345",
         accountName: "Vendor",
+        narration: "x",
       }),
     ).rejects.toBeInstanceOf(SnippeValidationError);
 
@@ -150,6 +156,7 @@ describe("PayoutsResource — bank", () => {
     const url = new URL(mock.lastRequest().url);
     expect(url.pathname).toBe("/v1/payouts/fee");
     expect(url.searchParams.get("amount")).toBe("100000");
+    expect(url.searchParams.get("channel")).toBe("bank");
   });
 });
 
@@ -174,15 +181,18 @@ describe("PayoutsResource — cross-channel reads", () => {
     expect(new URL(mock.lastRequest().url).pathname).toBe("/v1/payouts/po_1");
   });
 
-  it("lists payouts with status and channel filters", async () => {
-    const mock = createMockFetch([{ body: successEnvelope([]) }]);
+  it("lists payouts via /api/v1/payouts as a page with date filters", async () => {
+    const mock = createMockFetch([
+      { body: successEnvelope({ items: [], total: 0, limit: 10, offset: 0 }) },
+    ]);
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
 
-    await snippe.payouts.list({ limit: 10, status: "completed", channel: "mobile" });
+    const page = await snippe.payouts.list({ limit: 10, startDate: "2026-01-01", endDate: "2026-01-31" });
+    expect(page.total).toBe(0);
     const url = new URL(mock.lastRequest().url);
-    expect(url.pathname).toBe("/v1/payouts");
+    expect(url.pathname).toBe("/api/v1/payouts");
     expect(url.searchParams.get("limit")).toBe("10");
-    expect(url.searchParams.get("status")).toBe("completed");
-    expect(url.searchParams.get("channel")).toBe("mobile");
+    expect(url.searchParams.get("start_date")).toBe("2026-01-01");
+    expect(url.searchParams.get("end_date")).toBe("2026-01-31");
   });
 });

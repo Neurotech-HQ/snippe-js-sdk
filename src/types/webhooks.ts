@@ -3,8 +3,8 @@ import type { Money } from "./index";
 export type WebhookEventType =
   | "payment.completed"
   | "payment.failed"
-  | "payment.voided"
-  | "payment.expired"
+  | "payment.cancelled"
+  | "payment.reversed"
   | "payout.completed"
   | "payout.failed"
   | "payout.reversed";
@@ -23,23 +23,26 @@ export interface WebhookPaymentData {
   customer?: { phone?: string; name?: string; email?: string };
   metadata?: Record<string, unknown>;
   completed_at?: string;
-  failed_at?: string;
   failure_reason?: string;
+  failure_code?: string;
 }
 
+/** Payout payloads reuse the payment shape: the recipient arrives as `customer`. */
 export interface WebhookPayoutData {
   reference: string;
-  external_reference?: string;
   status: string;
   amount: Money;
-  fees?: Money;
-  total?: Money;
+  settlement?: {
+    gross: Money;
+    fees: Money;
+    net: Money;
+  };
   channel?: { type: string; provider?: string };
-  recipient?: { name?: string; phone?: string; account?: string };
+  customer?: { phone?: string; name?: string };
   metadata?: Record<string, unknown>;
   completed_at?: string;
-  failed_at?: string;
   failure_reason?: string;
+  failure_code?: string;
 }
 
 export interface WebhookEvent<
@@ -54,7 +57,7 @@ export interface WebhookEvent<
 }
 
 export type PaymentWebhookEvent = WebhookEvent<
-  "payment.completed" | "payment.failed" | "payment.voided" | "payment.expired",
+  "payment.completed" | "payment.failed" | "payment.cancelled" | "payment.reversed",
   WebhookPaymentData
 >;
 

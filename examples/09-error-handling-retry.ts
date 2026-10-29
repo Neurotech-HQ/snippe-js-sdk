@@ -5,7 +5,7 @@
  *
  *   - 400/401/403/422    — do NOT retry, the request shape is wrong
  *   - 429                — wait `rateLimit.resetSeconds` and try again
- *   - 5xx / PAY_001      — retry with exponential backoff + jitter
+ *   - 5xx                — retry with exponential backoff + jitter
  *   - network / timeout  — retry as above
  *
  * Always reuse the same idempotency key across retries so the server
@@ -46,7 +46,7 @@ async function createMobileWithRetry(
         continue;
       }
 
-      // 5xx / PAY_001 / network / timeout: exponential backoff with jitter.
+      // 5xx / network / timeout: exponential backoff with jitter.
       const base = Math.min(60_000, 2 ** attempt * 1000);
       const jitter = Math.floor(Math.random() * 1000);
       console.warn(

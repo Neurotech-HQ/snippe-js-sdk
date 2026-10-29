@@ -42,12 +42,12 @@ async function main() {
       narration: "Salary January 2026",
       metadata: { employeeId: "EMP-001" },
     },
-    { idempotencyKey: "payout-emp001-jan" }, // ≤30 chars
+    { idempotencyKey: "payout-emp001-jan" }, // ≤64 chars
   );
 
   console.log("Payout created:");
   console.log("  reference :", payout.reference);
-  console.log("  provider  :", payout.channel.provider); // auto-detected: airtel/mpesa/mixx/halotel
+  console.log("  provider  :", payout.channel?.provider); // auto-detected: airtel/mpesa/mixx/halotel
   console.log("  fees      :", payout.fees.value, "TZS");
   console.log("  total     :", payout.total.value, "TZS");
 }

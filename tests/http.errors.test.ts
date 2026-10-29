@@ -34,6 +34,7 @@ describe("HTTP error handling", () => {
         amount: 5000,
         phoneNumber: "255781000000",
         recipientName: "R",
+        narration: "x",
       }),
     ).rejects.toMatchObject({ status: 403, errorCode: "insufficient_scope" });
   });
