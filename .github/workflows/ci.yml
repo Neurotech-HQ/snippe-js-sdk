@@ -31,7 +31,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # vitest 4 needs Node 20+. Node 18 still gets install, typecheck and build.
       - name: Run tests with coverage
+        if: matrix.node != '18.x'
         run: npm run test:coverage
 
       - name: Build
