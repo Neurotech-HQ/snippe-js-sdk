@@ -7,9 +7,14 @@
   "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
     }
   },
   "files": [
@@ -19,7 +24,7 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:esm": "tsc -p tsconfig.esm.json && node -e \"require('fs').writeFileSync('dist/esm/package.json', JSON.stringify({type:'module'}))\"",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:types": "tsc -p tsconfig.types.json",
     "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",

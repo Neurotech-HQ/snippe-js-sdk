@@ -2,6 +2,8 @@
 
 Runnable integration snippets for `@snippe/sdk`. Each file is self-contained — pick the one closest to your use case, copy it into your app, adapt.
 
+> **These examples move real money.** Snippe has no sandbox and every API key is live. Change the amounts and phone numbers to your own before running them, especially the payout examples.
+
 ## Run locally
 
 From the repo root:
@@ -10,7 +12,7 @@ From the repo root:
 # Install dev deps if you haven't
 npm install
 
-# Export your sandbox key
+# Export your API key
 export SNIPPE_API_KEY="snp_..."
 # Optional, only the webhook example needs it
 export SNIPPE_WEBHOOK_SECRET="whsec_..."

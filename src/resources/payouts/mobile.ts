@@ -1,6 +1,6 @@
-import type { HttpClient } from "../../http";
-import { normalisePhone } from "../../internal/normalisePhone";
-import { validatePayoutAmount } from "../../internal/validateAmount";
+import type { HttpClient } from "../../http.js";
+import { normalisePhone } from "../../internal/normalisePhone.js";
+import { validatePayoutAmount } from "../../internal/validateAmount.js";
 import type {
   CreateMobilePayoutInput,
   MobilePayoutFeeInput,
@@ -8,7 +8,7 @@ import type {
   PayoutFee,
   RequestOptions,
   ResolvedSnippeConfig,
-} from "../../types";
+} from "../../types/index.js";
 
 /**
  * Mobile-money disbursements (M-Pesa, Airtel Money, Mixx, Halotel).

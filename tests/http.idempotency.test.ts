@@ -1,6 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { Snippe, SnippeValidationError, generateIdempotencyKey } from "../src";
-import { createMockFetch, successEnvelope } from "./helpers/mockFetch";
+import { Snippe, SnippeError, SnippeValidationError, generateIdempotencyKey } from "../src";
+import { createMockFetch, errorEnvelope, successEnvelope } from "./helpers/mockFetch";
+
+const payoutInput = {
+  amount: 5000,
+  phoneNumber: "255781000000",
+  recipientName: "R",
+  narration: "x",
+};
+
+async function failedSend(snippe: Snippe): Promise<SnippeError> {
+  try {
+    await snippe.payouts.mobile.send(payoutInput);
+  } catch (err) {
+    return err as SnippeError;
+  }
+  throw new Error("should have thrown");
+}
 
 describe("Idempotency keys", () => {
   it("auto-generates a key ≤64 chars on POST when the caller omits one", async () => {
@@ -69,6 +85,58 @@ describe("Idempotency keys", () => {
 
     // No fetch call should have been made.
     expect(mock.requests).toHaveLength(0);
+  });
+
+  it("rejects an empty key, which would make the API skip deduplication", async () => {
+    const mock = createMockFetch([{ status: 201, body: successEnvelope({}) }]);
+    const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
+
+    await expect(
+      snippe.payouts.mobile.send(payoutInput, { idempotencyKey: "" }),
+    ).rejects.toBeInstanceOf(SnippeValidationError);
+    expect(mock.requests).toHaveLength(0);
+  });
+
+  it.each([
+    ["an API error", { status: 500, body: errorEnvelope(500, "INT_001", "boom") }],
+    ["a non-JSON response", { status: 502, rawText: "<html>bad gateway</html>" }],
+    ["a network error", { throwError: new TypeError("ECONNREFUSED") }],
+    ["a timeout", { delayMs: 200, body: {} }],
+  ])("returns the generated key on %s so a retry can't pay twice", async (_label, failure) => {
+    const mock = createMockFetch([
+      failure,
+      { status: 201, body: successEnvelope({ reference: "po_1" }) },
+    ]);
+    const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch, timeoutMs: 50 });
+
+    const err = await failedSend(snippe);
+    expect(err.retryable).toBe(true);
+    expect(err.idempotencyKey).toBe(mock.requests[0].headers["idempotency-key"]);
+
+    await snippe.payouts.mobile.send(payoutInput, { idempotencyKey: err.idempotencyKey });
+    expect(mock.requests[1].headers["idempotency-key"]).toBe(err.idempotencyKey);
+  });
+
+  it("returns a caller-supplied key on the error too", async () => {
+    const mock = createMockFetch([
+      { status: 500, body: errorEnvelope(500, "INT_001", "boom") },
+    ]);
+    const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
+
+    await expect(
+      snippe.payouts.mobile.send(payoutInput, { idempotencyKey: "ord-1" }),
+    ).rejects.toMatchObject({ idempotencyKey: "ord-1" });
+  });
+
+  it("leaves the key undefined on GET errors", async () => {
+    const mock = createMockFetch([
+      { status: 500, body: errorEnvelope(500, "INT_001", "boom") },
+    ]);
+    const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
+
+    await expect(snippe.payments.balance()).rejects.toMatchObject({
+      idempotencyKey: undefined,
+    });
   });
 
   it("does not send an Idempotency-Key header on GET requests", async () => {

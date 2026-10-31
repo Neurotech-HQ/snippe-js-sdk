@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
-import { SnippeWebhookVerificationError } from "./errors";
-import type { AnyWebhookEvent } from "./types";
+import { SnippeWebhookVerificationError } from "./errors.js";
+import type { AnyWebhookEvent } from "./types/index.js";
 
 export interface VerifyWebhookOptions {
   /** Raw request body exactly as received — string or Buffer. Do NOT re-serialize JSON. */

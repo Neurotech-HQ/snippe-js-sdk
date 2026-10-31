@@ -1,4 +1,4 @@
-import type { HttpClient } from "../http";
+import type { HttpClient } from "../http.js";
 import type {
   CreateSessionParams,
   ListSessionsParams,
@@ -6,7 +6,7 @@ import type {
   ResolvedSnippeConfig,
   Session,
   SessionList,
-} from "../types";
+} from "../types/index.js";
 
 /**
  * Hosted checkout — Snippe renders the payment UI on its own page and
