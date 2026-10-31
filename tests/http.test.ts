@@ -29,12 +29,12 @@ describe("HTTP client", () => {
     const mock = createMockFetch([{ body: successEnvelope([]) }]);
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
 
-    await snippe.payments.list({ limit: 10, status: undefined, payment_type: "mobile" });
+    await snippe.payments.list({ limit: 10, status: undefined, search: "jane" });
 
     const url = new URL(mock.lastRequest().url);
     expect(url.pathname).toBe("/v1/payments");
     expect(url.searchParams.get("limit")).toBe("10");
-    expect(url.searchParams.get("payment_type")).toBe("mobile");
+    expect(url.searchParams.get("search")).toBe("jane");
     expect(url.searchParams.has("status")).toBe(false);
   });
 

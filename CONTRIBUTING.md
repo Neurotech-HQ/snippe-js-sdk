@@ -13,7 +13,7 @@ npm run test:coverage  # with v8 coverage report (coverage/)
 npm run build          # emit dist/{esm,cjs,types}
 ```
 
-Node 18+ is required (the SDK uses the global `fetch`).
+Developing on the SDK needs Node 20+, because the test runner (vitest 4) doesn't start on Node 18. The published SDK itself supports Node 18+ (it uses the global `fetch`).
 
 ## Examples
 
@@ -45,6 +45,7 @@ Coverage thresholds (enforced in `vitest.config.ts`): 85% lines/statements/funct
 
 - Node 18 **and** 20 matrix on `ubuntu-latest`.
 - `npm ci` → `npm run typecheck` → `npm run test:coverage` → `npm run build`.
+- The tests are skipped on the Node 18 leg, because vitest 4 needs Node 20+. That leg only covers install, typecheck and build.
 - Coverage uploaded as an artifact on the Node 20 leg.
 
 ## Releasing

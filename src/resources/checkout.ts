@@ -5,6 +5,7 @@ import type {
   RequestOptions,
   ResolvedSnippeConfig,
   Session,
+  SessionList,
 } from "../types";
 
 /**
@@ -47,8 +48,8 @@ export class CheckoutResource {
   async list(
     params: ListSessionsParams = {},
     options?: RequestOptions,
-  ): Promise<Session[]> {
-    return this.http.request<Session[]>({
+  ): Promise<SessionList> {
+    return this.http.request<SessionList>({
       method: "GET",
       path: "/api/v1/sessions",
       query: params as Record<string, unknown>,
@@ -56,9 +57,9 @@ export class CheckoutResource {
     });
   }
 
-  /** Cancel a pending or active session. No-op on already-completed sessions. */
-  async cancel(reference: string, options?: RequestOptions): Promise<Session> {
-    return this.http.request<Session>({
+  /** Cancel a pending or active session. Fetch it with `get()` afterwards if you need its new state. */
+  async cancel(reference: string, options?: RequestOptions): Promise<void> {
+    await this.http.request<unknown>({
       method: "POST",
       path: `/api/v1/sessions/${encodeURIComponent(reference)}/cancel`,
       options,

@@ -4,7 +4,9 @@ import { SnippeError } from "../src";
 describe("SnippeError.retryable", () => {
   const cases: Array<[string, { status: number; errorCode: string }, boolean]> = [
     ["rate limit", { status: 429, errorCode: "rate_limit_exceeded" }, true],
-    ["PAY_001", { status: 500, errorCode: "PAY_001" }, true],
+    ["429 RATE_001", { status: 429, errorCode: "RATE_001" }, true],
+    ["500 PAY_001", { status: 500, errorCode: "PAY_001" }, true],
+    ["422 PAY_001 refusal", { status: 422, errorCode: "PAY_001" }, false],
     ["network error", { status: 0, errorCode: "network_error" }, true],
     ["timeout", { status: 0, errorCode: "timeout" }, true],
     ["500 server error", { status: 500, errorCode: "server_error" }, true],

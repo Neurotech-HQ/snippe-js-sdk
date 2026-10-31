@@ -32,6 +32,7 @@ export class MobilePayments {
       customer: customerToWire(input.customer),
       webhookUrl: input.webhookUrl ?? this.config.webhookUrl,
       metadata: input.metadata,
+      subaccount: input.subaccount,
     };
     return this.http.request<Payment>({
       method: "POST",

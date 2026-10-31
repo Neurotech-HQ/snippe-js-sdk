@@ -3,9 +3,9 @@ import { normalisePhone } from "../../internal/normalisePhone";
 import { validatePayoutAmount } from "../../internal/validateAmount";
 import type {
   CreateMobilePayoutInput,
+  MobilePayoutFeeInput,
   Payout,
   PayoutFee,
-  PayoutFeeInput,
   RequestOptions,
   ResolvedSnippeConfig,
 } from "../../types";
@@ -35,6 +35,7 @@ export class MobilePayouts {
       narration: input.narration,
       webhookUrl: input.webhookUrl ?? this.config.webhookUrl,
       metadata: input.metadata,
+      subaccount: input.subaccount,
     };
     return this.http.request<Payout>({
       method: "POST",
@@ -45,13 +46,17 @@ export class MobilePayouts {
   }
 
   async fee(
-    input: PayoutFeeInput,
+    input: MobilePayoutFeeInput,
     options?: RequestOptions,
   ): Promise<PayoutFee> {
     return this.http.request<PayoutFee>({
       method: "GET",
       path: "/v1/payouts/fee",
-      query: { amount: input.amount },
+      query: {
+        amount: input.amount,
+        channel: "mobile",
+        phone: input.phoneNumber && normalisePhone(input.phoneNumber),
+      },
       options,
     });
   }

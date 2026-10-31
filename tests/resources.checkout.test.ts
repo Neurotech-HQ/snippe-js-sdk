@@ -74,33 +74,50 @@ describe("CheckoutResource (snippe.checkout)", () => {
     });
   });
 
-  it("cancels a session via POST /cancel", async () => {
+  it("sends line items, custom fields and display settings in snake_case", async () => {
+    const mock = createMockFetch([{ status: 201, body: successEnvelope({ reference: "sess_3" }, 201) }]);
+    const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
+
+    await snippe.checkout.create({
+      amount: 50000,
+      lineItems: [{ name: "Headphones", quantity: 1, unitPrice: 50000, imageUrl: "https://cdn.example/h.jpg" }],
+      customFields: [{ key: "delivery_address", label: "Delivery", type: "textarea", required: true }],
+      display: { lineItemsStyle: "cards" },
+    });
+
+    expect(mock.lastRequest().body).toMatchObject({
+      line_items: [{ name: "Headphones", quantity: 1, unit_price: 50000, image_url: "https://cdn.example/h.jpg" }],
+      custom_fields: [{ key: "delivery_address", required: true }],
+      display: { line_items_style: "cards" },
+    });
+  });
+
+  it("cancels a session via POST /cancel and resolves to undefined", async () => {
     const mock = createMockFetch([
-      {
-        body: {
-          reference: "sess_1",
-          status: "cancelled",
-          currency: "TZS",
-          checkout_url: "x",
-          short_code: "y",
-          payment_link_url: "z",
-          expires_at: "x",
-        },
-      },
+      { body: { status: "success", code: 200, message: "session cancelled" } },
     ]);
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
 
-    await snippe.checkout.cancel("sess_1");
+    await expect(snippe.checkout.cancel("sess_1")).resolves.toBeUndefined();
     const req = mock.lastRequest();
     expect(req.method).toBe("POST");
     expect(new URL(req.url).pathname).toBe("/api/v1/sessions/sess_1/cancel");
   });
 
-  it("lists sessions with query params", async () => {
-    const mock = createMockFetch([{ body: successEnvelope([]) }]);
+  it("lists sessions with query params and returns sessions + pagination", async () => {
+    const mock = createMockFetch([
+      {
+        body: successEnvelope({
+          sessions: [{ reference: "sess_1", status: "pending" }],
+          pagination: { page: 1, page_size: 5, total: 1, total_pages: 1 },
+        }),
+      },
+    ]);
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
 
-    await snippe.checkout.list({ limit: 5, status: "pending" });
+    const list = await snippe.checkout.list({ limit: 5, status: "pending" });
+    expect(list.sessions[0].reference).toBe("sess_1");
+    expect(list.pagination.pageSize).toBe(5);
     const url = new URL(mock.lastRequest().url);
     expect(url.pathname).toBe("/api/v1/sessions");
     expect(url.searchParams.get("limit")).toBe("5");

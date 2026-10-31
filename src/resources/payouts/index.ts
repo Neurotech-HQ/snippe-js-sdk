@@ -1,6 +1,7 @@
 import type { HttpClient } from "../../http";
 import type {
   ListPayoutsParams,
+  Page,
   Payout,
   RequestOptions,
   ResolvedSnippeConfig,
@@ -34,14 +35,15 @@ export class PayoutsResource {
     });
   }
 
-  /** List payouts (paginated). Optionally filter by `status` or `channel`. */
+  /** List payouts (offset-paginated, max 100 per page). */
   async list(
     params: ListPayoutsParams = {},
     options?: RequestOptions,
-  ): Promise<Payout[]> {
-    return this.http.request<Payout[]>({
+  ): Promise<Page<Payout>> {
+    // List is only mounted under /api/v1; it accepts the same API keys.
+    return this.http.request<Page<Payout>>({
       method: "GET",
-      path: "/v1/payouts",
+      path: "/api/v1/payouts",
       query: params as Record<string, unknown>,
       options,
     });

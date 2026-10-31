@@ -21,7 +21,7 @@ export interface ResolvedSnippeConfig {
 }
 
 export interface RequestOptions {
-  /** Per-request idempotency key (max 30 chars). Auto-generated for POSTs if omitted. */
+  /** Per-request idempotency key (max 64 chars). Auto-generated for POSTs if omitted. */
   idempotencyKey?: string;
   /** Override the per-request timeout. */
   timeoutMs?: number;
@@ -46,8 +46,17 @@ export interface SnippeErrorEnvelope {
 }
 
 export interface Money {
-  currency: "TZS";
+  /** Usually TZS; the gross amount of a cross-border payment is in the payer's currency. */
+  currency: "TZS" | (string & {});
   value: number;
+}
+
+/** Offset-paginated list returned by `payments.list/search` and `payouts.list`. */
+export interface Page<T> {
+  items: T[];
+  total: number;
+  limit: number;
+  offset: number;
 }
 
 export interface RateLimitInfo {

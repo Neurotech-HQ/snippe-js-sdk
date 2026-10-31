@@ -30,6 +30,20 @@ describe("PaymentsResource — mobile", () => {
     });
   });
 
+  it("passes subaccount through to the wire", async () => {
+    const mock = createMockFetch([{ status: 201, body: successEnvelope({ reference: "pi_1" }) }]);
+    const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
+
+    await snippe.payments.mobile.create({
+      amount: 500,
+      phoneNumber: "255781000000",
+      customer: { firstName: "A", lastName: "B", email: "a@b.co" },
+      subaccount: "wallet_shop",
+    });
+
+    expect(mock.lastRequest().body).toMatchObject({ subaccount: "wallet_shop" });
+  });
+
   it("normalises a local 0XXXXXXXXX phone before sending", async () => {
     const mock = createMockFetch([{ status: 201, body: successEnvelope({ reference: "pi_1" }) }]);
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
@@ -152,6 +166,31 @@ describe("PaymentsResource — card", () => {
       },
     });
   });
+
+  it("allows omitting cancelUrl (only redirectUrl is required by the API)", async () => {
+    const mock = createMockFetch([{ status: 201, body: successEnvelope({ reference: "pi_3" }) }]);
+    const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
+
+    await snippe.payments.card.create({
+      amount: 50_000,
+      phoneNumber: "255781000000",
+      redirectUrl: "https://shop.example.com/done",
+      customer: {
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@example.com",
+        address: "Plot 12",
+        city: "Dar es Salaam",
+        state: "Dar",
+        postcode: "11101",
+        country: "TZ",
+      },
+    });
+
+    const details = (mock.lastRequest().body as { details: Record<string, unknown> }).details;
+    expect(details.redirect_url).toBe("https://shop.example.com/done");
+    expect(details).not.toHaveProperty("cancel_url");
+  });
 });
 
 describe("PaymentsResource — cross-channel reads", () => {
@@ -166,16 +205,33 @@ describe("PaymentsResource — cross-channel reads", () => {
     expect(new URL(mock.lastRequest().url).pathname).toBe("/v1/payments/pi_abc");
   });
 
-  it("re-triggers a USSD push", async () => {
+  it("re-triggers a USSD push and returns the push result", async () => {
     const mock = createMockFetch([
-      { body: successEnvelope({ reference: "pi_abc", status: "pending" }) },
+      {
+        body: successEnvelope({
+          reference: "pi_abc",
+          external_reference: "psp_1",
+          status: "pending",
+          phone: "255781000000",
+        }),
+      },
     ]);
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
 
-    await snippe.payments.retriggerPush("pi_abc");
+    const result = await snippe.payments.retriggerPush("pi_abc");
+    expect(result.externalReference).toBe("psp_1");
     const req = mock.lastRequest();
     expect(req.method).toBe("POST");
     expect(new URL(req.url).pathname).toBe("/v1/payments/pi_abc/push");
+    expect(req.body).toBeUndefined();
+  });
+
+  it("re-triggers a USSD push to a different, normalised phone", async () => {
+    const mock = createMockFetch([{ body: successEnvelope({ reference: "pi_abc" }) }]);
+    const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
+
+    await snippe.payments.retriggerPush("pi_abc", { phoneNumber: "0712000000" });
+    expect(mock.lastRequest().body).toEqual({ phone: "255712000000" });
   });
 
   it("calls /v1/payments/balance", async () => {
@@ -195,24 +251,40 @@ describe("PaymentsResource — cross-channel reads", () => {
     expect(new URL(mock.lastRequest().url).pathname).toBe("/v1/payments/balance");
   });
 
-  it("translates camelCase search params to snake_case query string", async () => {
-    const mock = createMockFetch([{ body: successEnvelope([]) }]);
+  it("searches via /api/v1/payments/search with phone and status", async () => {
+    const mock = createMockFetch([
+      { body: successEnvelope({ items: [], total: 0, limit: 10, offset: 0 }) },
+    ]);
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
 
-    await snippe.payments.search({ phoneNumber: "255781000000", status: "completed" });
+    const page = await snippe.payments.search({ phone: "781000000", status: "completed" });
+    expect(page.items).toEqual([]);
     const url = new URL(mock.lastRequest().url);
-    expect(url.pathname).toBe("/v1/payments/search");
-    expect(url.searchParams.get("phone_number")).toBe("255781000000");
+    expect(url.pathname).toBe("/api/v1/payments/search");
+    expect(url.searchParams.get("phone")).toBe("781000000");
     expect(url.searchParams.get("status")).toBe("completed");
   });
 
-  it("translates camelCase list params (paymentType) to snake_case query string", async () => {
-    const mock = createMockFetch([{ body: successEnvelope([]) }]);
+  it("lists payments as a page and snake_cases date filters", async () => {
+    const mock = createMockFetch([
+      {
+        body: successEnvelope({
+          items: [{ reference: "pi_1", status: "completed", payment_type: "mobile" }],
+          total: 1,
+          limit: 20,
+          offset: 0,
+        }),
+      },
+    ]);
     const snippe = new Snippe({ apiKey: "snp_test", fetch: mock.fetch });
 
-    await snippe.payments.list({ limit: 20, paymentType: "mobile" });
+    const page = await snippe.payments.list({ limit: 20, fromDate: "2026-01-01", toDate: "2026-01-31" });
+    expect(page.total).toBe(1);
+    expect(page.items[0].paymentType).toBe("mobile");
     const url = new URL(mock.lastRequest().url);
+    expect(url.pathname).toBe("/v1/payments");
     expect(url.searchParams.get("limit")).toBe("20");
-    expect(url.searchParams.get("payment_type")).toBe("mobile");
+    expect(url.searchParams.get("from_date")).toBe("2026-01-01");
+    expect(url.searchParams.get("to_date")).toBe("2026-01-31");
   });
 });
