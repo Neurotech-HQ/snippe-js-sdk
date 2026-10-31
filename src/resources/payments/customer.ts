@@ -1,4 +1,4 @@
-import type { PaymentCustomer } from "../../types";
+import type { PaymentCustomer } from "../../types/index.js";
 
 /**
  * Translate the SDK's camelCase Customer shape into the wire form expected by

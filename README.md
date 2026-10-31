@@ -61,6 +61,8 @@ The SDK auto-generates an `Idempotency-Key` (24 chars; the API allows up to 64) 
 await snippe.payments.mobile.create(input, { idempotencyKey: "ord-12345-t1" });
 ```
 
+If a call fails with `err.retryable`, the first attempt may still have gone through. Retry with `err.idempotencyKey` or your own key, because a new key can charge or pay out twice. See [Errors](#errors).
+
 ## Resources
 
 ### Payments
@@ -75,9 +77,11 @@ await snippe.payments.card.create({ amount, phoneNumber, redirectUrl, customer }
 await snippe.payments.get(reference);
 const { items, total } = await snippe.payments.list({ limit: 20, status: "completed", fromDate: "2026-01-01" });
 await snippe.payments.search({ phone: "781000000" }); // partial match on reference and/or phone
-await snippe.payments.retriggerPush(reference); // or { phoneNumber } to push to another number
+await snippe.payments.retriggerPush(reference);
 await snippe.payments.balance();
 ```
+
+`retriggerPush` depends on the provider handling the payment. If that provider can't re-send the prompt, the API returns a 400, so be ready to create a new payment instead.
 
 Card payments require the full billing address (`address`, `city`, `state`, `postcode`, `country`); the type system enforces this at compile time.
 
@@ -215,6 +219,8 @@ app.post(
 ```
 
 > Webhook payloads keep snake_case field names (`event.data.failure_reason`, `event.data.completed_at`) to match the API exactly — useful when correlating with logged raw bodies. Everything else in the SDK is camelCase.
+>
+> `metadata` is yours, so its keys are kept exactly as you wrote them. Send `{ orderId }` and you read `event.data.metadata.orderId`.
 
 ## Errors
 
@@ -236,7 +242,9 @@ try {
   } else if (err instanceof SnippeValidationError) {
     // fix the request, don't retry
   } else if (err instanceof SnippeError && err.retryable) {
-    // 429 / 5xx / network / timeout — retry with the same idempotency key
+    // 429 / 5xx / network / timeout. The first attempt may have gone through,
+    // so reuse its key. A new key can charge or pay out twice.
+    await snippe.payments.mobile.create(input, { idempotencyKey: err.idempotencyKey });
   } else {
     throw err;
   }
@@ -250,7 +258,7 @@ API error codes follow `DOMAIN_NNN` (`VAL_001` validation, `AUTH_007` invalid AP
 | Option        | Type                         | Default                  | Description                                             |
 | ------------- | ---------------------------- | ------------------------ | ------------------------------------------------------- |
 | `apiKey`      | `string`                     | —                        | Required. `snp_...` from the Snippe Dashboard.          |
-| `environment` | `"sandbox" \| "production"` | `"production"`           | Target environment.                                     |
+| `environment` | `"sandbox" \| "production"` | `"production"`           | Leave unset. Snippe has no sandbox and every key is live, so `"sandbox"` throws unless you also set `baseUrl`. |
 | `baseUrl`     | `string`                     | `https://api.snippe.sh`  | Override the API base URL.                              |
 | `timeoutMs`   | `number`                     | `30000`                  | Per-request timeout.                                    |
 | `webhookUrl`  | `string`                     | —                        | Default `webhookUrl` applied to `create` / `send` calls. |

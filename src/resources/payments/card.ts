@@ -1,13 +1,13 @@
-import type { HttpClient } from "../../http";
-import { normalisePhone } from "../../internal/normalisePhone";
-import { validatePaymentAmount } from "../../internal/validateAmount";
+import type { HttpClient } from "../../http.js";
+import { normalisePhone } from "../../internal/normalisePhone.js";
+import { validatePaymentAmount } from "../../internal/validateAmount.js";
 import type {
   CreateCardPaymentInput,
   Payment,
   RequestOptions,
   ResolvedSnippeConfig,
-} from "../../types";
-import { customerToWire } from "./customer";
+} from "../../types/index.js";
+import { customerToWire } from "./customer.js";
 
 /**
  * Card payments (Visa / Mastercard via Selcom). Returns a `paymentUrl` the

@@ -1,4 +1,4 @@
-import type { RateLimitInfo } from "./types";
+import type { RateLimitInfo } from "./types/index.js";
 
 /**
  * `DOMAIN_NNN` codes come from the API's error envelope. The lowercase codes
@@ -43,6 +43,7 @@ export interface SnippeErrorOptions {
   rateLimit?: RateLimitInfo;
   raw?: unknown;
   cause?: unknown;
+  idempotencyKey?: string;
 }
 
 /**
@@ -56,6 +57,8 @@ export class SnippeError extends Error {
   readonly rateLimit?: RateLimitInfo;
   readonly raw?: unknown;
   readonly cause?: unknown;
+  /** The key the failed request used, generated or yours. Pass it back when retrying. */
+  readonly idempotencyKey?: string;
 
   constructor(opts: SnippeErrorOptions) {
     super(opts.message);
@@ -66,12 +69,16 @@ export class SnippeError extends Error {
     this.rateLimit = opts.rateLimit;
     this.raw = opts.raw;
     this.cause = opts.cause;
+    this.idempotencyKey = opts.idempotencyKey;
   }
 
   /**
-   * True if retrying with the same idempotency key is likely to succeed:
-   * 429, 5xx, network errors and timeouts. A 4xx is never retryable — that
-   * includes `PAY_001` on a 422, which is a refusal (e.g. amount out of bounds).
+   * True if retrying is likely to succeed: 429, 5xx, network errors and
+   * timeouts. A 4xx is never retryable — that includes `PAY_001` on a 422,
+   * which is a refusal (e.g. amount out of bounds).
+   *
+   * The first attempt may have gone through, so always retry with
+   * `err.idempotencyKey`. A new key can charge or pay out twice.
    */
   get retryable(): boolean {
     if (this.errorCode === "network_error" || this.errorCode === "timeout") return true;

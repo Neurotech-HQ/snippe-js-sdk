@@ -3,15 +3,15 @@ import {
   SnippeError,
   SnippeRateLimitError,
   SnippeValidationError,
-} from "./errors";
-import { toCamelCase, toSnakeCase } from "./internal/caseMap";
+} from "./errors.js";
+import { toCamelCase, toSnakeCase } from "./internal/caseMap.js";
 import type {
   RateLimitInfo,
   RequestOptions,
   ResolvedSnippeConfig,
   SnippeEnvelope,
   SnippeErrorEnvelope,
-} from "./types";
+} from "./types/index.js";
 
 const SDK_VERSION = "1.1.0";
 const USER_AGENT = `@snippe/sdk/${SDK_VERSION}`;
@@ -32,8 +32,9 @@ export class HttpClient {
   constructor(private readonly config: ResolvedSnippeConfig) {}
 
   async request<T>(req: HttpRequest): Promise<T> {
+    const idempotencyKey = resolveIdempotencyKey(req);
     const url = this.buildUrl(req.path, req.query);
-    const headers = this.buildHeaders(req);
+    const headers = this.buildHeaders(req, idempotencyKey);
     const timeoutMs = req.options?.timeoutMs ?? this.config.timeoutMs;
 
     const controller = new AbortController();
@@ -59,6 +60,7 @@ export class HttpClient {
           errorCode: "timeout",
           message: `Request to ${req.path} timed out after ${timeoutMs}ms`,
           cause: err,
+          idempotencyKey,
         });
       }
       throw new SnippeError({
@@ -66,6 +68,7 @@ export class HttpClient {
         errorCode: "network_error",
         message: `Network error calling Snippe: ${(err as Error).message}`,
         cause: err,
+        idempotencyKey,
       });
     }
     clearTimeout(timeoutId);
@@ -89,12 +92,13 @@ export class HttpClient {
           requestId,
           rateLimit,
           raw: text,
+          idempotencyKey,
         });
       }
     }
 
     if (!response.ok || isErrorEnvelope(parsed)) {
-      throw buildError(response.status, parsed, requestId, rateLimit);
+      throw buildError(response.status, parsed, requestId, rateLimit, idempotencyKey);
     }
 
     if (isSuccessEnvelope<T>(parsed)) {
@@ -117,7 +121,10 @@ export class HttpClient {
     return url.toString();
   }
 
-  private buildHeaders(req: HttpRequest): Record<string, string> {
+  private buildHeaders(
+    req: HttpRequest,
+    idempotencyKey: string | undefined,
+  ): Record<string, string> {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${this.config.apiKey}`,
       Accept: "application/json",
@@ -130,21 +137,26 @@ export class HttpClient {
       headers["Content-Type"] = "application/json";
     }
 
-    const wantsIdempotency = req.idempotent ?? req.method === "POST";
-    if (wantsIdempotency) {
-      const key = req.options?.idempotencyKey ?? generateIdempotencyKey();
-      if (key.length > MAX_IDEMPOTENCY_KEY_LENGTH) {
-        throw new SnippeValidationError({
-          status: 0,
-          errorCode: "validation_error",
-          message: `Idempotency-Key must be ≤ ${MAX_IDEMPOTENCY_KEY_LENGTH} characters (got ${key.length}).`,
-        });
-      }
-      headers["Idempotency-Key"] = key;
+    if (idempotencyKey !== undefined) {
+      headers["Idempotency-Key"] = idempotencyKey;
     }
 
     return headers;
   }
+}
+
+function resolveIdempotencyKey(req: HttpRequest): string | undefined {
+  if (!(req.idempotent ?? req.method === "POST")) return undefined;
+  const key = req.options?.idempotencyKey ?? generateIdempotencyKey();
+  // An empty key would be sent, and the API would then skip deduplication.
+  if (key.length === 0 || key.length > MAX_IDEMPOTENCY_KEY_LENGTH) {
+    throw new SnippeValidationError({
+      status: 0,
+      errorCode: "validation_error",
+      message: `Idempotency-Key must be 1-${MAX_IDEMPOTENCY_KEY_LENGTH} characters (got ${key.length}).`,
+    });
+  }
+  return key;
 }
 
 function isSuccessEnvelope<T>(value: unknown): value is SnippeEnvelope<T> {
@@ -172,12 +184,13 @@ function buildError(
   parsed: unknown,
   requestId: string | undefined,
   rateLimit: RateLimitInfo | undefined,
+  idempotencyKey: string | undefined,
 ): SnippeError {
   const envelope = isErrorEnvelope(parsed) ? parsed : undefined;
   const errorCode = envelope?.error_code ?? inferErrorCode(status);
   const message = envelope?.message ?? `Snippe API error (HTTP ${status})`;
 
-  const opts = { status, errorCode, message, requestId, rateLimit, raw: parsed };
+  const opts = { status, errorCode, message, requestId, rateLimit, raw: parsed, idempotencyKey };
 
   if (status === 401) return new SnippeAuthenticationError(opts);
   if (status === 403) return new SnippeAuthenticationError(opts);

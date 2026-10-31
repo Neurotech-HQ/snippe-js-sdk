@@ -1,5 +1,5 @@
-import type { HttpClient } from "../../http";
-import { normalisePhone } from "../../internal/normalisePhone";
+import type { HttpClient } from "../../http.js";
+import { normalisePhone } from "../../internal/normalisePhone.js";
 import type {
   Balance,
   ListPaymentsParams,
@@ -10,9 +10,9 @@ import type {
   ResolvedSnippeConfig,
   RetriggerPushInput,
   SearchPaymentsParams,
-} from "../../types";
-import { CardPayments } from "./card";
-import { MobilePayments } from "./mobile";
+} from "../../types/index.js";
+import { CardPayments } from "./card.js";
+import { MobilePayments } from "./mobile.js";
 
 /**
  * Composer over the per-channel sub-resources. Use `.mobile` or `.card` to
@@ -93,5 +93,5 @@ export class PaymentsResource {
   }
 }
 
-export { CardPayments } from "./card";
-export { MobilePayments } from "./mobile";
+export { CardPayments } from "./card.js";
+export { MobilePayments } from "./mobile.js";

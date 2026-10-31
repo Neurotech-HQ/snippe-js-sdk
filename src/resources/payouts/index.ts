@@ -1,13 +1,13 @@
-import type { HttpClient } from "../../http";
+import type { HttpClient } from "../../http.js";
 import type {
   ListPayoutsParams,
   Page,
   Payout,
   RequestOptions,
   ResolvedSnippeConfig,
-} from "../../types";
-import { BankPayouts } from "./bank";
-import { MobilePayouts } from "./mobile";
+} from "../../types/index.js";
+import { BankPayouts } from "./bank.js";
+import { MobilePayouts } from "./mobile.js";
 
 /**
  * Composer over the per-channel sub-resources. Use `.mobile` or `.bank` to
@@ -50,5 +50,5 @@ export class PayoutsResource {
   }
 }
 
-export { BankPayouts } from "./bank";
-export { MobilePayouts } from "./mobile";
+export { BankPayouts } from "./bank.js";
+export { MobilePayouts } from "./mobile.js";

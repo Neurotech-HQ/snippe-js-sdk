@@ -20,9 +20,14 @@ v1.1 aligns the SDK with what the Snippe API actually returns. The old shapes ne
 | `WebhookPayoutData` | `recipient`, `fees`, `total`, `failed_at` | `customer`, `settlement`, `failure_code` |
 | Idempotency key limit | 30 chars | 64 chars |
 | `SnippeError.retryable` | `true` for any `PAY_001` | `true` for 429, 5xx, network and timeout only |
+| `metadata` keys | Rewritten: `{ orderId }` became `order_id` on send and in webhooks, and `orderId` on read | Kept exactly as written. Anything stored before 1.1 keeps its snake_case keys, so update code that reads `metadata.order_id` from new events |
+| `environment: "sandbox"` | Silently used the live API | Throws unless `baseUrl` is set, because Snippe has no sandbox |
+| `idempotencyKey: ""` | Sent, and the API skipped deduplication | Rejected with `SnippeValidationError` |
 
 New, non-breaking:
 
+- `SnippeError.idempotencyKey` holds the key the failed request used. Pass it back when retrying, or a retry can charge or pay out twice.
+- `import { Snippe } from "@snippe/sdk"` now works in plain Node ESM (`"type": "module"` or `.mjs`). It crashed with `ERR_MODULE_NOT_FOUND` before.
 - `subaccount` on `payments.mobile/card.create()` and `payouts.mobile/bank.send()`.
 - `cancelUrl` is optional for card payments.
 - `checkout.create()` accepts `lineItems`, `customFields`, `display`, `billing`, `displayCurrency`; `checkout.list()` accepts `sourceType`, `sourceId`.
@@ -208,6 +213,6 @@ Quick checklist:
 2. Search-and-replace per the field tables above (most editors will catch unused snake_case in TypeScript).
 3. Re-route `payments.create({ payment_type: "X", ... })` and `payouts.send({ channel: "X", ... })` calls to the channel methods.
 4. Run your test suite. TypeScript will catch most mismatches.
-5. Smoke-test against the Snippe sandbox.
+5. Smoke-test with a small real amount. Snippe has no sandbox, so every key is live.
 
 If you hit an issue not covered here, open one at <https://github.com/Neurotech-HQ/snippe-js-sdk/issues>.

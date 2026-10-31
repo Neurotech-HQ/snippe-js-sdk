@@ -1,4 +1,4 @@
-import type { Money } from "./index";
+import type { Money } from "./index.js";
 
 export type WebhookEventType =
   | "payment.completed"

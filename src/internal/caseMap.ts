@@ -2,7 +2,8 @@
  * Recursively translate object keys between camelCase (public SDK surface)
  * and snake_case (Snippe API wire format). Plain objects and arrays are
  * recursed into; Dates, Buffers, class instances, and primitives are
- * returned untouched.
+ * returned untouched. `metadata` belongs to the caller, so its keys stay
+ * exactly as written in both directions.
  */
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -24,7 +25,7 @@ export function toSnakeCase(value: unknown): unknown {
   if (!isPlainObject(value)) return value;
   const out: Record<string, unknown> = {};
   for (const [key, val] of Object.entries(value)) {
-    out[camelToSnakeKey(key)] = toSnakeCase(val);
+    out[camelToSnakeKey(key)] = key === "metadata" ? val : toSnakeCase(val);
   }
   return out;
 }
@@ -34,7 +35,7 @@ export function toCamelCase(value: unknown): unknown {
   if (!isPlainObject(value)) return value;
   const out: Record<string, unknown> = {};
   for (const [key, val] of Object.entries(value)) {
-    out[snakeToCamelKey(key)] = toCamelCase(val);
+    out[snakeToCamelKey(key)] = key === "metadata" ? val : toCamelCase(val);
   }
   return out;
 }

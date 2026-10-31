@@ -1,13 +1,13 @@
-export { Snippe } from "./client";
-export { PaymentsResource } from "./resources/payments";
-export { CheckoutResource } from "./resources/checkout";
-export { PayoutsResource } from "./resources/payouts";
+export { Snippe } from "./client.js";
+export { PaymentsResource } from "./resources/payments/index.js";
+export { CheckoutResource } from "./resources/checkout.js";
+export { PayoutsResource } from "./resources/payouts/index.js";
 
-export { verifyWebhook, computeWebhookSignature } from "./webhooks";
-export type { VerifyWebhookOptions } from "./webhooks";
+export { verifyWebhook, computeWebhookSignature } from "./webhooks.js";
+export type { VerifyWebhookOptions } from "./webhooks.js";
 
-export { generateIdempotencyKey } from "./http";
-export { normalisePhone } from "./internal/normalisePhone";
+export { generateIdempotencyKey } from "./http.js";
+export { normalisePhone } from "./internal/normalisePhone.js";
 
 export {
   SnippeError,
@@ -15,8 +15,8 @@ export {
   SnippeValidationError,
   SnippeRateLimitError,
   SnippeWebhookVerificationError,
-} from "./errors";
-export type { SnippeErrorCode, SnippeErrorOptions } from "./errors";
+} from "./errors.js";
+export type { SnippeErrorCode, SnippeErrorOptions } from "./errors.js";
 
 export type {
   Environment,
@@ -75,7 +75,7 @@ export type {
   PaymentWebhookEvent,
   PayoutWebhookEvent,
   AnyWebhookEvent,
-} from "./types";
+} from "./types/index.js";
 
-import { Snippe } from "./client";
+import { Snippe } from "./client.js";
 export default Snippe;

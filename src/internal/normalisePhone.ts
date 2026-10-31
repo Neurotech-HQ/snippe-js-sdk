@@ -1,4 +1,4 @@
-import { SnippeValidationError } from "../errors";
+import { SnippeValidationError } from "../errors.js";
 
 const CANONICAL = /^255[678]\d{8}$/;
 

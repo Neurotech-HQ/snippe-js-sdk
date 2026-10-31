@@ -29,6 +29,12 @@ describe("Snippe client", () => {
     expect(cfg.timeoutMs).toBe(5_000);
   });
 
+  it("refuses sandbox without a baseUrl, because every key is live", () => {
+    expect(
+      () => new Snippe({ apiKey: "snp_test", environment: "sandbox" }),
+    ).toThrow(/no sandbox/);
+  });
+
   it("wires up payments, checkout, and payouts resources", () => {
     const snippe = new Snippe({ apiKey: "snp_test" });
     expect(snippe.payments).toBeDefined();

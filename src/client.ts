@@ -1,17 +1,14 @@
-import { HttpClient } from "./http";
-import { CheckoutResource } from "./resources/checkout";
-import { PaymentsResource } from "./resources/payments";
-import { PayoutsResource } from "./resources/payouts";
+import { HttpClient } from "./http.js";
+import { CheckoutResource } from "./resources/checkout.js";
+import { PaymentsResource } from "./resources/payments/index.js";
+import { PayoutsResource } from "./resources/payouts/index.js";
 import type {
   Environment,
   ResolvedSnippeConfig,
   SnippeConfig,
-} from "./types";
+} from "./types/index.js";
 
-const DEFAULT_BASE_URLS: Record<Environment, string> = {
-  sandbox: "https://api.snippe.sh",
-  production: "https://api.snippe.sh",
-};
+const DEFAULT_BASE_URL = "https://api.snippe.sh";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -46,12 +43,18 @@ export class Snippe {
     }
 
     const environment: Environment = config.environment ?? "production";
+    // Snippe has no sandbox: every key is live. Refuse to move real money under a test label.
+    if (environment === "sandbox" && !config.baseUrl) {
+      throw new Error(
+        'Snippe SDK: Snippe has no sandbox and every API key is live, so `environment: "sandbox"` would move real money. Remove it, or set `baseUrl` to your own test server.',
+      );
+    }
     const fetchImpl = config.fetch ?? resolveGlobalFetch();
 
     this.config = {
       apiKey: config.apiKey,
       environment,
-      baseUrl: config.baseUrl ?? DEFAULT_BASE_URLS[environment],
+      baseUrl: config.baseUrl ?? DEFAULT_BASE_URL,
       timeoutMs: config.timeoutMs ?? DEFAULT_TIMEOUT_MS,
       webhookUrl: config.webhookUrl,
       fetch: fetchImpl,

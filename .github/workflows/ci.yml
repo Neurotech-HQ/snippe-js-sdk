@@ -39,6 +39,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Unit tests import src/, so only this catches a package that won't load.
+      - name: Load the built package (CJS and ESM)
+        run: |
+          node -e "require('@snippe/sdk')"
+          node --input-type=module -e "import '@snippe/sdk'"
+
       - name: Upload coverage artifact
         if: matrix.node == '20.x'
         uses: actions/upload-artifact@v4

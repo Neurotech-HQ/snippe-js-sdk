@@ -82,6 +82,18 @@ describe("toCamelCase", () => {
     expect(toCamelCase({ firstName: "Jane" })).toEqual({ firstName: "Jane" });
   });
 
+  it("leaves metadata keys exactly as written in both directions", () => {
+    const metadata = { orderId: "x", utm_source: "ad", URL: "u", nested: { itemId: 1 } };
+    expect(toSnakeCase({ webhookUrl: "w", metadata })).toEqual({
+      webhook_url: "w",
+      metadata,
+    });
+    expect(toCamelCase({ webhook_url: "w", metadata })).toEqual({
+      webhookUrl: "w",
+      metadata,
+    });
+  });
+
   it("round-trips with toSnakeCase", () => {
     const input = {
       paymentType: "mobile",

@@ -1,5 +1,5 @@
-import type { HttpClient } from "../../http";
-import { validatePayoutAmount } from "../../internal/validateAmount";
+import type { HttpClient } from "../../http.js";
+import { validatePayoutAmount } from "../../internal/validateAmount.js";
 import type {
   CreateBankPayoutInput,
   Payout,
@@ -7,7 +7,7 @@ import type {
   PayoutFeeInput,
   RequestOptions,
   ResolvedSnippeConfig,
-} from "../../types";
+} from "../../types/index.js";
 
 /**
  * Bank-transfer disbursements (CRDB, NMB, NBC, ABSA, etc.). Settles within

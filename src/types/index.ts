@@ -2,6 +2,7 @@ export type Environment = "sandbox" | "production";
 
 export interface SnippeConfig {
   apiKey: string;
+  /** Leave unset. Snippe has no sandbox, so `"sandbox"` throws unless `baseUrl` is set. */
   environment?: Environment;
   baseUrl?: string;
   timeoutMs?: number;
@@ -65,7 +66,7 @@ export interface RateLimitInfo {
   resetSeconds?: number;
 }
 
-export * from "./payments";
-export * from "./sessions";
-export * from "./payouts";
-export * from "./webhooks";
+export * from "./payments.js";
+export * from "./sessions.js";
+export * from "./payouts.js";
+export * from "./webhooks.js";

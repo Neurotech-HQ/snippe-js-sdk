@@ -1,4 +1,4 @@
-import { SnippeValidationError } from "../errors";
+import { SnippeValidationError } from "../errors.js";
 
 const MIN_PAYMENT_TZS = 500;
 const MIN_PAYOUT_TZS = 5000;

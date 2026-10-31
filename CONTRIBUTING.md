@@ -44,7 +44,7 @@ Coverage thresholds (enforced in `vitest.config.ts`): 85% lines/statements/funct
 [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) runs on every push and PR to `main`:
 
 - Node 18 **and** 20 matrix on `ubuntu-latest`.
-- `npm ci` → `npm run typecheck` → `npm run test:coverage` → `npm run build`.
+- `npm ci` → `npm run typecheck` → `npm run test:coverage` → `npm run build` → load the built package through both `require` and `import`.
 - The tests are skipped on the Node 18 leg, because vitest 4 needs Node 20+. That leg only covers install, typecheck and build.
 - Coverage uploaded as an artifact on the Node 20 leg.
 
